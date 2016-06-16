@@ -3,7 +3,5 @@ services:
     class: Drupal\synchron\EventListener\SynchronSubscriber
     tags:
       - {name: event_subscriber}
-  database:
-    class: Drupal\Core\Database\Connection
-    factory: Drupal\Core\Database\Database::getConnection
-    arguments: [ixarm]
+  synchron:
+    class: Drupal\synchron\Service\SynchronSchema

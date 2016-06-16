@@ -4,12 +4,23 @@
   use Drupal\Core\Database\Database;
   use Drupal\Core\Database\Connection;
   use Drupal\Component\DependencyInjection\Container;
-
+  use Drupal\synchron\Schema\SynchronSchema;
 
   function synchron_form_alter(&$form, FormState $formstate) {
 
+    // Get main synchron services
+    $synchronService = \Drupal::service('synchron');
+
+    // Get name off from and to databases
+    $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+    $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_database' : 'ixarm';
+
+    var_dump($fromDatabase);
+    var_dump($toDatabase);
+    die();
+
     // Set database connection to ixarm
-    setConnectionDatabase('ixarm');
+    $synchronService->setConnectionDatabase('ixarm');
     print_r(getEntity());
     $loadNode = loadNode(11257);
     var_dump($loadNode->toArray());
@@ -17,7 +28,7 @@
     print_r('<--------------------------!!!!!!!-------------------------->');
 
     // Set database connection to ixarm achats
-    setConnectionDatabase('ixarm_achats');
+    $synchronService->setConnectionDatabase('ixarm_achats');
     print_r(getEntity());
     $loadNode = loadNode(11257);
     var_dump($loadNode->toArray());
@@ -33,24 +44,13 @@
     return $entity_ids;
   }
 
-  function setConnectionDatabase($databaseName) {
-    // Get active current database service connection
-    $getConnectionOptions = \Drupal::service('database')->getConnectionOptions();
 
-    // Choose a database name
-    // Use an admin form to handle the database name liste
-    // Override default database name only because
-    // This will work on the same server only
-    $getConnectionOptions['database'] = $databaseName;
-
-    // Return the good PDO object to this connection
-    $pdoConnection = \Drupal::service('database')->open($getConnectionOptions);
-
-    // Override the service by passing new values to connection construct
-    \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
-  }
 
   function loadNode($nid) {
     \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
     return \Drupal\node\Entity\Node::load($nid);
+  }
+
+  function synchronFromTo($entity, $fromDatabaseName, $toDatabaseName) {
+
   }
