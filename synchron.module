@@ -1,0 +1,66 @@
+<?php
+
+  use Drupal\Core\Form\FormState;
+  use Drupal\Core\Database\Database;
+  use Drupal\Core\Database\Connection;
+  use Drupal\Component\DependencyInjection\Container;
+
+
+  function synchron_form_alter(&$form, FormState $formstate) {
+
+    $getConnectionOptions = \Drupal::service('database')->getConnectionOptions();
+    // var_dump($getConnectionOptions);
+    // die();
+    $getConnectionOptions['database'] = 'ixarm';
+    $pdoConnection = \Drupal::service('database')->open($getConnectionOptions);
+    \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
+    // \Drupal::service('database')->setTarget('ixarm');
+    // Database::setActiveConnection('ixarm');
+    // var_dump(\Drupal::service('database')->getTarget());
+    // var_dump($getConnectionOptions);
+    // die();
+
+    // Get current database name
+    // $currentDBName = Database::getConnection()->getKey();
+    // print_r('----- '. $currentDBName .' -----');
+    // print_r(getEntity());
+    // // $entityLoad = \Drupal\node\Entity\Node::load(11257);
+    // var_dump($entityLoad);
+    // $queryAchats = Database::getConnection('default', 'achats');
+    // $queryIxarm = Database::getConnection('default', 'ixarm');
+    // Database::setActiveConnection('achats');
+    // $currentDBName = Database::getConnection()->getKey();
+    // print_r('----- '. $currentDBName .' -----');
+    print_r(getEntity());
+    // $entityLoad = \Drupal\node\Entity\Node::load(11257);
+    // var_dump($entityLoad);
+    die();
+
+
+
+    print_r('<--------------------------default-------------------------->');
+
+    // Set new database
+    Database::setActiveConnection('ixarm');
+    $currentDBName = Database::getConnection()->getKey();
+    var_dump($currentDBName);
+    print_r(count(getEntity()));
+    print_r('<--------------------------ixarm-------------------------->');
+
+    // Set new database
+    Database::setActiveConnection('achats');
+    $currentDBName = Database::getConnection()->getKey();
+    var_dump($currentDBName);
+    print_r(count(getEntity()));
+    print_r('<--------------------------achats-------------------------->');
+
+    die();
+  }
+
+  function getEntity() {
+    // Get entity
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'article');
+    $entity_ids = $query->execute();
+    return $entity_ids;
+  }
