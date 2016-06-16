@@ -4,12 +4,12 @@
   use Drupal\Core\Database\Database;
   use Drupal\Core\Database\Connection;
   use Drupal\Component\DependencyInjection\Container;
-  use Drupal\synchron\Schema\SynchronSchema;
+  use Drupal\synchron\Schema\SynchronService;
 
   function synchron_form_alter(&$form, FormState $formstate) {
 
     // Get main synchron services
-    $synchronService = \Drupal::service('synchron');
+    $synchronService = \Drupal::service('synchron_service');
 
     // Get name off from and to databases
     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];

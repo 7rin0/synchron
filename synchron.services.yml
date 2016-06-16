@@ -3,5 +3,6 @@ services:
     class: Drupal\synchron\EventListener\SynchronSubscriber
     tags:
       - {name: event_subscriber}
-  synchron:
-    class: Drupal\synchron\Service\SynchronSchema
+
+  synchron_service:
+    class: Drupal\synchron\Service\SynchronService

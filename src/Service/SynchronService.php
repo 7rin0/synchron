@@ -3,7 +3,7 @@
   // TODO: USE THIS AS SERVICE
   namespace Drupal\synchron\Service;
 
-  class SynchronSchema {
+  class SynchronService {
 
     protected $defaultConnectionOptions;
 
