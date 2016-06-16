@@ -3,6 +3,8 @@
   // TODO: USE THIS AS SERVICE
   namespace Drupal\synchron\Service;
 
+  use \Drupal\node\Entity\Node;
+
   class SynchronService {
 
     protected $defaultConnectionOptions;
@@ -40,22 +42,51 @@
       \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
     }
 
-    public function loadNode($nid) {
-      \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
-      return \Drupal\node\Entity\Node::load($nid);
+    public function loadNode($value, $field) {
+      // Get storage
+      $nodeStorage = \Drupal::entityManager()->getStorage('node');
+      $nodeStorage->resetCache(array($nid));
+
+      // Query
+      $query = \Drupal::entityQuery('node');
+      $query->condition($field, $value);
+      $entity_ids = $query->execute();
+
+      // Return node
+      return Node::load(@reset($entity_ids));
     }
 
     public function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
 
-      // Set database connection to ixarm
+      // Set database connection to $fromDatabase
       $this->setConnectionDatabase($fromDatabase);
-      $loadNode = $this->loadNode($nid);
+      $loadNodeThisDatabase = $this->loadNode($nid, 'nid');
 
       // If entity exists continue
-      if($loadNode && FALSE) {
+      if($loadNodeThisDatabase) {
         // If entity hasnt synchronid add new one
-        var_dump($loadNode->get('synchronid'));
-        // die();
+        if(!$syncronid = $loadNodeThisDatabase->get('synchronid')->getValue()) {
+          $syncronid = uniqid();
+          $loadNode->set('synchronid', $syncronid);
+          $loadNode->save();
+        }
+
+        // Synchro this content to another databases
+        // Set database connection to $toDatabase
+        $this->setConnectionDatabase($toDatabase);
+        // Load node by synchronid to match the target node
+        $loadNodeTargetDatabase = $this->loadNodeId($nid, 'syncronid');
+
+        if($loadNodeThisDatabase) {
+
+        } else {
+
+        }
+
+        die();
+
+        $loadNode->set('synchronid', 9878);
+        $loadNode->save();
 
         var_dump($loadNode->toArray());
 

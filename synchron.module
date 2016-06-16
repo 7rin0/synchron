@@ -38,21 +38,16 @@
     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
     // TODO: Add synchro id field
-    $synchronService->provisionFromSiteToAnother(11257, $fromDatabase, $toDatabase);
-
-    // die();
+    $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
   }
 
   function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
     // TODO: DO we need to affect every single entity?*
     // Or filter on admin
     if ($entity_type->id() == 'node') {
-      // die();
       $fields = [];
       $fields['synchronid'] = BaseFieldDefinition::create('integer')
-        ->setLabel('Shared ID by two synchronized entities')
-        ->setComputed(TRUE)
-        ->setReadOnly(TRUE);
+        ->setLabel('Shared ID by two synchronized entities');
       return $fields;
     }
   }
