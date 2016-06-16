@@ -5,6 +5,8 @@
   use Drupal\Core\Database\Connection;
   use Drupal\Component\DependencyInjection\Container;
   use Drupal\synchron\Schema\SynchronService;
+  use Drupal\Core\Entity\EntityTypeInterface;
+  use Drupal\Core\Field\BaseFieldDefinition;
 
   function synchron_form_alter(&$form, FormState $formstate) {
 
@@ -29,5 +31,4 @@
     $fields['synchronid'] = BaseFieldDefinition::create('string')
       ->setLabel('Shared ID by two synchronized entities');
     return $fields;
-
   }
