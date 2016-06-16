@@ -1,12 +1,31 @@
 <?php
 
   use Drupal\Core\Form\FormState;
-  use Drupal\Core\Database\Database;
-  use Drupal\Core\Database\Connection;
-  use Drupal\Component\DependencyInjection\Container;
-  use Drupal\synchron\Schema\SynchronService;
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Field\BaseFieldDefinition;
+
+  /**
+   * Implements hook_install().
+   */
+  function synchron_install() {
+    // Create field storage for the 'Highlight' base field.
+    $entity_manager = \Drupal::entityManager();
+    $definition = $entity_manager->getFieldStorageDefinitions('node')['synchronid'];
+    $entity_manager->onFieldStorageDefinitionCreate($definition);
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  }
+
+  /**
+   * Implements hook_uninstall().
+   */
+  function synchron_uninstall() {
+    $entity_manager = \Drupal::entityManager();
+    $definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid'];
+    $entity_manager->onFieldStorageDefinitionDelete($definition);
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  }
 
   function synchron_form_alter(&$form, FormState $formstate) {
 
@@ -21,17 +40,19 @@
     // TODO: Add synchro id field
     $synchronService->provisionFromSiteToAnother(11257, $fromDatabase, $toDatabase);
 
-    die();
+    // die();
   }
 
-  // function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
-  //   // TODO: DO we need to affect every single entity?*
-  //   // Or filter on admin
-  //   if ($entity_type->id() == 'node') {
-  //     die();
-  //     $fields = [];
-  //     $fields['synchronid'] = BaseFieldDefinition::create('string')
-  //       ->setLabel('Shared ID by two synchronized entities');
-  //     return $fields;
-  //   }
-  // }
+  function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+    // TODO: DO we need to affect every single entity?*
+    // Or filter on admin
+    if ($entity_type->id() == 'node') {
+      // die();
+      $fields = [];
+      $fields['synchronid'] = BaseFieldDefinition::create('integer')
+        ->setLabel('Shared ID by two synchronized entities')
+        ->setComputed(TRUE)
+        ->setReadOnly(TRUE);
+      return $fields;
+    }
+  }

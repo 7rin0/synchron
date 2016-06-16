@@ -52,10 +52,10 @@
       $loadNode = $this->loadNode($nid);
 
       // If entity exists continue
-      if($loadNode) {
+      if($loadNode && FALSE) {
         // If entity hasnt synchronid add new one
         var_dump($loadNode->get('synchronid'));
-        die();
+        // die();
 
         var_dump($loadNode->toArray());
 
