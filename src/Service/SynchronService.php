@@ -22,7 +22,7 @@
       return $this->defaultConnectionOptions;
     }
 
-    function setConnectionDatabase($databaseName) {
+    public function setConnectionDatabase($databaseName) {
 
       // Get active current database service connection
       $getConnectionOptions = $this->getDefaultConnectionOptions();
@@ -40,12 +40,12 @@
       \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
     }
 
-    function loadNode($nid) {
+    public function loadNode($nid) {
       \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
       return \Drupal\node\Entity\Node::load($nid);
     }
 
-    function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
+    public function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
 
       // Set database connection to ixarm
       $this->setConnectionDatabase($fromDatabase);
@@ -70,7 +70,7 @@
 
     }
 
-    function getEntity() {
+    public function getEntity() {
       // Get entity
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'article');

@@ -24,11 +24,14 @@
     die();
   }
 
-  function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
-    // TODO: DO we need to affect every single entity?*
-    // Or filter on admin
-    $fields = [];
-    $fields['synchronid'] = BaseFieldDefinition::create('string')
-      ->setLabel('Shared ID by two synchronized entities');
-    return $fields;
-  }
+  // function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
+  //   // TODO: DO we need to affect every single entity?*
+  //   // Or filter on admin
+  //   if ($entity_type->id() == 'node') {
+  //     die();
+  //     $fields = [];
+  //     $fields['synchronid'] = BaseFieldDefinition::create('string')
+  //       ->setLabel('Shared ID by two synchronized entities');
+  //     return $fields;
+  //   }
+  // }
