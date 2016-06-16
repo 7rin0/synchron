@@ -13,7 +13,7 @@
 
     // Get name off from and to databases
     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
-    $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_database' : 'ixarm';
+    $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
     var_dump($fromDatabase);
     var_dump($toDatabase);
