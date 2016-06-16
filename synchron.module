@@ -9,7 +9,7 @@
   function synchron_form_alter(&$form, FormState $formstate) {
 
     // Get main synchron services
-    $synchronService = \Drupal::service('synchron_service');
+    $synchronService = \Drupal::service('synchron');
 
     // Get name off from and to databases
     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
