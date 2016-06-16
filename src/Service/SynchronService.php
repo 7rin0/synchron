@@ -40,4 +40,42 @@
       \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
     }
 
+    function loadNode($nid) {
+      \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
+      return \Drupal\node\Entity\Node::load($nid);
+    }
+
+    function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
+
+      // Set database connection to ixarm
+      $this->setConnectionDatabase($fromDatabase);
+      $loadNode = $this->loadNode($nid);
+
+      // If entity exists continue
+      if($loadNode) {
+        // If entity hasnt synchronid add new one
+        var_dump($loadNode->get('synchronid'));
+        die();
+
+        var_dump($loadNode->toArray());
+
+        print_r('<--------------------------!!!!!!!-------------------------->');
+
+        // Set database connection to ixarm achats
+        $this->setConnectionDatabase($toDatabase);
+        print_r(getEntity());
+        $loadNode = loadNode(11257);
+        var_dump($loadNode->toArray());
+      }
+
+    }
+
+    function getEntity() {
+      // Get entity
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'article');
+      $entity_ids = $query->execute();
+      return $entity_ids;
+    }
+
   }

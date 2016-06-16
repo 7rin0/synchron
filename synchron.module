@@ -11,46 +11,23 @@
     // Get main synchron services
     $synchronService = \Drupal::service('synchron');
 
+    // TODO: Get this values from admin form
     // Get name off from and to databases
     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
-    var_dump($fromDatabase);
-    var_dump($toDatabase);
-    die();
-
-    // Set database connection to ixarm
-    $synchronService->setConnectionDatabase('ixarm');
-    print_r(getEntity());
-    $loadNode = loadNode(11257);
-    var_dump($loadNode->toArray());
-
-    print_r('<--------------------------!!!!!!!-------------------------->');
-
-    // Set database connection to ixarm achats
-    $synchronService->setConnectionDatabase('ixarm_achats');
-    print_r(getEntity());
-    $loadNode = loadNode(11257);
-    var_dump($loadNode->toArray());
+    // TODO: Add synchro id field
+    $synchronService->provisionFromSiteToAnother(11257, $fromDatabase, $toDatabase);
 
     die();
   }
 
-  function getEntity() {
-    // Get entity
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'article');
-    $entity_ids = $query->execute();
-    return $entity_ids;
-  }
-
-
-
-  function loadNode($nid) {
-    \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
-    return \Drupal\node\Entity\Node::load($nid);
-  }
-
-  function synchronFromTo($entity, $fromDatabaseName, $toDatabaseName) {
+  function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
+    // TODO: DO we need to affect every single entity?*
+    // Or filter on admin
+    $fields = [];
+    $fields['synchronid'] = BaseFieldDefinition::create('string')
+      ->setLabel('Shared ID by two synchronized entities');
+    return $fields;
 
   }
