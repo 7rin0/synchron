@@ -82,14 +82,13 @@
         // Set database connection to $toDatabase
         $this->setConnectionDatabase($toDatabase);
 
-        var_dump($syncronid);
-
         // Load node by synchronid to match the target node
         if($loadNodeTargetDatabase = $this->loadNode($syncronid, 'synchronid')) {
           // TODO replace target data with origin data
           echo 'found';
         } else {
-          $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->save();
+          $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
+          $loadNodeTargetDatabase->save();
         }
         print_r('From');
         print_r($loadNodeThisDatabase->id());

@@ -18,12 +18,6 @@
    * Implements hook_uninstall().
    */
   function synchron_uninstall() {
-    $entity_manager = \Drupal::entityManager();
-    $definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid'];
-    $entity_manager->onFieldStorageDefinitionDelete($definition);
-    \Drupal::entityManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
-
     // Delete All references to synchronid
     $query = \Drupal::entityQuery('node');
     $query->condition('synchronid', 'NULL', '!=');
@@ -31,4 +25,10 @@
     foreach($entity_ids as $nid) {
       Node::load($nid)->set('synchronid', NULL)->save();
     }
+    // Update
+    $entity_manager = \Drupal::entityManager();
+    $definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid'];
+    $entity_manager->onFieldStorageDefinitionDelete($definition);
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
   }
