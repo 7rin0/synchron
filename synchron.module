@@ -3,6 +3,7 @@
   use Drupal\Core\Form\FormState;
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Field\BaseFieldDefinition;
+  use \Drupal\node\Entity\Node;
 
   /**
    * Implements hook_install().
@@ -25,6 +26,14 @@
     $entity_manager->onFieldStorageDefinitionDelete($definition);
     \Drupal::entityManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Delete All references to synchronid
+    $query = \Drupal::entityQuery('node');
+    $query->condition('synchronid', 'NULL', '!=');
+    $entity_ids = $query->execute();
+
+    foreach($entity_ids as $nid) {
+      Node::load($nid)->set('synchronid', NULL)->save();
+    }
   }
 
   function synchron_form_alter(&$form, FormState $formstate) {
@@ -37,8 +46,19 @@
     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
+    // $query = \Drupal::entityQuery('node');
+    // $query->condition('synchronid', 'NULL', '!=');
+    // $entity_ids = $query->execute();
+    //
+    // foreach($entity_ids as $nid) {
+    //   Node::load($nid)->set('synchronid', NULL)->save();
+    // }
+    //
+    // var_dump($entity_ids);
+    // die();
+
     // TODO: Add synchro id field
-    $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
+    // $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
   }
 
   function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
@@ -47,6 +67,7 @@
     if ($entity_type->id() == 'node') {
       $fields = [];
       $fields['synchronid'] = BaseFieldDefinition::create('integer')
+        ->setDefaultValue(0)
         ->setLabel('Shared ID by two synchronized entities');
       return $fields;
     }

@@ -67,26 +67,21 @@
         // If entity hasnt synchronid add new one
         if(!$syncronid = $loadNodeThisDatabase->get('synchronid')->getValue()) {
           $syncronid = uniqid();
-          $loadNode->set('synchronid', $syncronid);
-          $loadNode->save();
+          $loadNodeThisDatabase->set('synchronid', $syncronid)->save();
         }
 
         // Synchro this content to another databases
         // Set database connection to $toDatabase
         $this->setConnectionDatabase($toDatabase);
-        // Load node by synchronid to match the target node
-        $loadNodeTargetDatabase = $this->loadNodeId($nid, 'syncronid');
 
-        if($loadNodeThisDatabase) {
+        // Load node by synchronid to match the target node
+        if($loadNodeTargetDatabase = $this->loadNode($nid, 'syncronid')) {
 
         } else {
 
         }
 
         die();
-
-        $loadNode->set('synchronid', 9878);
-        $loadNode->save();
 
         var_dump($loadNode->toArray());
 
