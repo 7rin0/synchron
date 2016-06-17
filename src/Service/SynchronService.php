@@ -74,17 +74,22 @@
         if(!$syncronid = $loadNodeThisDatabase->get('synchronid')->getValue()) {
           $syncronid = uniqid();
           $loadNodeThisDatabase->set('synchronid', $syncronid)->save();
+        } else {
+          $syncronid = $syncronid[0]['value'];
         }
 
         // Synchro this content to another databases
         // Set database connection to $toDatabase
         $this->setConnectionDatabase($toDatabase);
 
+        var_dump($syncronid);
+
         // Load node by synchronid to match the target node
-        if($loadNodeTargetDatabase = $this->loadNode($nid, 'syncronid')) {
-
+        if($loadNodeTargetDatabase = $this->loadNode($syncronid, 'synchronid')) {
+          // TODO replace target data with origin data
+          echo 'found';
         } else {
-
+          $loadNodeThisDatabase->createDuplicate()->save();
         }
 
         die();
@@ -102,6 +107,8 @@
         ->condition('kv.name', 'synchron')
         ->fields('kv')
         ->execute();
+
+      // TODO Force entity update
 
       if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
         $moduleExists = $moduleInstallerService->install(array('synchron'));
