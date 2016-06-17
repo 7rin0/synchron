@@ -35,32 +35,7 @@
       Node::load($nid)->set('synchronid', NULL)->save();
     }
   }
-
-  function synchron_form_alter(&$form, FormState $formstate) {
-
-    // Get main synchron services
-    $synchronService = \Drupal::service('synchron');
-
-    // TODO: Get this values from admin form
-    // Get name off from and to databases
-    $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
-    $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
-
-    // $query = \Drupal::entityQuery('node');
-    // $query->condition('synchronid', 'NULL', '!=');
-    // $entity_ids = $query->execute();
-    //
-    // foreach($entity_ids as $nid) {
-    //   Node::load($nid)->set('synchronid', NULL)->save();
-    // }
-    //
-    // var_dump($entity_ids);
-    // die();
-
-    // TODO: Add synchro id field
-    // $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
-  }
-
+  
   function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
     // TODO: DO we need to affect every single entity?*
     // Or filter on admin

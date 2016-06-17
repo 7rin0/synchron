@@ -2,3 +2,4 @@ type: module
 name: Synchron
 description: Provides synchronization bettween sites on the same server
 core: 8.x
+package: "Synchron"

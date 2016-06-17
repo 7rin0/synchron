@@ -29,6 +29,9 @@
       // Get active current database service connection
       $getConnectionOptions = $this->getDefaultConnectionOptions();
 
+      // Service database
+      $databaseService = \Drupal::service('database');
+
       // Choose a database name
       // Use an admin form to handle the database name liste
       // Override default database name only because
@@ -36,10 +39,13 @@
       $getConnectionOptions['database'] = $databaseName;
 
       // Return the good PDO object to this connection
-      $pdoConnection = \Drupal::service('database')->open($getConnectionOptions);
+      $pdoConnection = $databaseService->open($getConnectionOptions);
 
       // Override the service by passing new values to connection construct
-      \Drupal::service('database')->__construct($pdoConnection, $getConnectionOptions);
+      $databaseService->__construct($pdoConnection, $getConnectionOptions);
+
+      // CHeck if module exists
+      $this->moduleHandler();
     }
 
     public function loadNode($value, $field) {
@@ -82,18 +88,26 @@
         }
 
         die();
+      }
+    }
 
-        var_dump($loadNode->toArray());
+    protected function moduleHandler() {
+      $databaseConnectionService = \Drupal::service('database');
+      $moduleHandlerService = \Drupal::service('module_handler');
+      $moduleInstallerService = \Drupal::service('module_installer');
+      // Check if module exists
+      $moduleExists = $moduleHandlerService->moduleExists('synchron');
+      // Check if module is enabled
+      $isSynchronEnabled = $databaseConnectionService->select('key_value', 'kv')
+        ->condition('kv.name', 'synchron')
+        ->fields('kv')
+        ->execute();
 
-        print_r('<--------------------------!!!!!!!-------------------------->');
-
-        // Set database connection to ixarm achats
-        $this->setConnectionDatabase($toDatabase);
-        print_r(getEntity());
-        $loadNode = loadNode(11257);
-        var_dump($loadNode->toArray());
+      if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
+        $moduleExists = $moduleInstallerService->install(array('synchron'));
       }
 
+      return $moduleExists;
     }
 
     public function getEntity() {
