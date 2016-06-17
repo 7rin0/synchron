@@ -3,4 +3,4 @@ name: Synchron
 description: Provides synchronization bettween sites on the same server
 core: 8.x
 package: "Synchron"
-version: '8.x-3.0
+# version: '8.x-3.0
