@@ -21,7 +21,7 @@
       $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
       // TODO: Add synchro id field
-      $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
+      // $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
 
       // TODO if asked synchronization of content we check request here and then we provision
       // if ($event->getRequest()->query->get('redirect-me')) {}

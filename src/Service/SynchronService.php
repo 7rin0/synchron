@@ -89,9 +89,13 @@
           // TODO replace target data with origin data
           echo 'found';
         } else {
-          $loadNodeThisDatabase->createDuplicate()->save();
+          $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->save();
         }
-
+        print_r('From');
+        print_r($loadNodeThisDatabase->id());
+        print_r('====================================================================================================================================================================================================================================================================');
+        print_r('To');
+        print_r($loadNodeTargetDatabase->id());
         die();
       }
     }
@@ -108,7 +112,7 @@
         ->fields('kv')
         ->execute();
 
-      // TODO Force entity update
+      // TODO Force entities to update if needed
 
       if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
         $moduleExists = $moduleInstallerService->install(array('synchron'));
@@ -124,5 +128,4 @@
       $entity_ids = $query->execute();
       return $entity_ids;
     }
-
   }
