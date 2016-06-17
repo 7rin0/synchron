@@ -7,6 +7,7 @@
   use Symfony\Component\HttpKernel\Event\GetResponseEvent;
   use Symfony\Component\EventDispatcher\EventSubscriberInterface;
   use Drupal\Core\Database\Database;
+  use Drupal\node\Entity\Node;
 
   class SynchronSubscriber implements EventSubscriberInterface {
 
@@ -24,7 +25,6 @@
       // $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
 
       // TODO if asked synchronization of content we check request here and then we provision
-      // if ($event->getRequest()->query->get('redirect-me')) {}
     }
 
     /**

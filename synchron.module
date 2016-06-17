@@ -1,9 +1,8 @@
 <?php
 
-  use Drupal\Core\Form\FormState;
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Field\BaseFieldDefinition;
-  use \Drupal\node\Entity\Node;
+  use Drupal\node\Entity\Node;
 
   /**
    * Implements hook_install().
@@ -26,17 +25,17 @@
     $entity_manager->onFieldStorageDefinitionDelete($definition);
     \Drupal::entityManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
     // Delete All references to synchronid
     $query = \Drupal::entityQuery('node');
     $query->condition('synchronid', 'NULL', '!=');
     $entity_ids = $query->execute();
-
     foreach($entity_ids as $nid) {
       Node::load($nid)->set('synchronid', NULL)->save();
     }
   }
-  
-  function synchron_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+
+  function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
     // TODO: DO we need to affect every single entity?*
     // Or filter on admin
     if ($entity_type->id() == 'node') {
