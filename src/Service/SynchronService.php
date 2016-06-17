@@ -93,7 +93,7 @@
         }
         print_r('From');
         print_r($loadNodeThisDatabase->id());
-        print_r('====================================================================================================================================================================================================================================================================');
+        print_r('==============================================================================================================');
         print_r('To');
         print_r($loadNodeTargetDatabase->id());
         die();
@@ -113,7 +113,6 @@
         ->execute();
 
       // TODO Force entities to update if needed
-
       if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
         $moduleExists = $moduleInstallerService->install(array('synchron'));
       }
