@@ -45,7 +45,7 @@
     public function loadNode($value, $field) {
       // Get storage
       $nodeStorage = \Drupal::entityManager()->getStorage('node');
-      $nodeStorage->resetCache(array($nid));
+      $nodeStorage->resetCache(array($value));
 
       // Query
       $query = \Drupal::entityQuery('node');
@@ -90,12 +90,23 @@
           $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
           $loadNodeTargetDatabase->save();
         }
+
+        // Update revisions on target node
+        $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalRevisions);
+
         print_r('From');
         print_r($loadNodeThisDatabase->id());
         print_r('==============================================================================================================');
         print_r('To');
         print_r($loadNodeTargetDatabase->id());
         die();
+      }
+    }
+
+    protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions) {
+      // Insert revisions
+      foreach ($originalNodeRevisions as $revisionNode) {
+        # code...
       }
     }
 
@@ -133,13 +144,14 @@
         ->condition('nr.revision_uid', $originalNode->get('revision_uid')->getValue()[0]['target_id'])
         ->fields('nr')
         ->execute();
-      $originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ);
 
-      // Load Original Revisions entities
-      $originalRevisionEntity = [];
-      foreach ($originalRevisions as $key => $value) {
-        // TODO dynamique load by entity instead only node based
-        $originalRevisionEntity[] = $entityManagerService->getStorage('node')->loadRevision($value->vid)->toArray();
+      if($originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ)) {
+        // Load Original Revisions entities
+        $originalRevisionEntity = [];
+        foreach ($originalRevisions as $key => $value) {
+          // TODO dynamique load by entity instead only node based
+          $originalRevisionEntity[] = $entityManagerService->getStorage('node')->loadRevision($value->vid);
+        }
       }
     }
 
