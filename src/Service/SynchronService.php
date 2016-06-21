@@ -52,8 +52,8 @@
       $query->condition($field, $value);
       $entity_ids = $query->execute();
 
-      // Return node
-      return Node::load(@reset($entity_ids));
+      // Return the last updated node
+      return Node::load(@end($entity_ids));
     }
 
     public function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
@@ -63,15 +63,18 @@
       // If entity exists continue
       if($loadNodeThisDatabase = $this->loadNode($nid, 'nid')) {
         $nodeThisDatabase = $loadNodeThisDatabase->toArray();
-        $originalRevisions = $this->getRevisions($loadNodeThisDatabase);
 
         // If entity hasnt synchronid add new one
-        if(!$syncronid = $nodeThisDatabase['synchronid']) {
+        if(!$nodeThisDatabase['synchronid']) {
           $syncronid = uniqid();
           $loadNodeThisDatabase->set('synchronid', $syncronid)->save();
+          $nodeThisDatabase = $loadNodeThisDatabase->toArray();
         } else {
-          $syncronid = $syncronid[0]['value'];
+          $syncronid = $nodeThisDatabase['synchronid'][0]['value'];
         }
+
+        // Get all revisions from original node
+        $originalNodeRevisions = $this->getRevisions($loadNodeThisDatabase);
 
         // Synchro this content to another databases
         // Set database connection to $toDatabase
@@ -79,20 +82,18 @@
 
         // Load node by synchronid to match the target node
         if($loadNodeTargetDatabase = $this->loadNode($syncronid, 'synchronid')) {
-          // Delete target revisions
-          $this->deleteRevisions($loadNodeTargetDatabase);
           // TODO replace target data with origin data
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
-          echo 'found';
+          echo '#####FOUND#####';
         } else {
           $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
           $loadNodeTargetDatabase->save();
         }
 
         // Update revisions on target node
-        $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalRevisions);
+        $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalNodeRevisions);
 
         print_r('From');
         print_r($loadNodeThisDatabase->id());
@@ -104,10 +105,26 @@
     }
 
     protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions) {
+      // print_r($targetNode->toArray());
+      // Delete target revisions
+      $this->deleteRevisions($targetNode);
       // Insert revisions
       foreach ($originalNodeRevisions as $revisionNode) {
-        # code...
+        $revisionValues = $revisionNode->toArray();
+        unset(
+          $revisionValues['nid'],
+          $revisionValues['uuid'],
+          $revisionValues['vid']
+        );
+        foreach ($revisionValues as $key => $value) {
+          if($targetNode->getFieldDefinition($key)) {
+            $targetNode->set($key, $value);
+          }
+        }
+        $targetNode->setNewRevision();
+        $targetNode->save();
       }
+      die();
     }
 
     protected function moduleHandler() {
@@ -131,10 +148,13 @@
 
     // Delete all revisions to a given node
     protected function deleteRevisions($targetNode) {
-      $entityManagerService = $node_revision = \Drupal::entityTypeManager();
-      $getEntityRevisions = $this->serviceDatabase->delete('node_revision')
-        ->condition('revision_uid', $targetNode->get('revision_uid')->getValue()[0]['target_id'])
-        ->execute();
+      if($targetNode) {
+        $entityManagerService = $node_revision = \Drupal::entityTypeManager();
+        $getEntityRevisions = $this->serviceDatabase->delete('node_revision')
+          ->condition('revision_uid', $targetNode->get('revision_uid')->getValue()[0]['target_id'])
+          ->condition('vid', $targetNode->get('vid')->getValue()[0]['value'], '!=')
+          ->execute();
+      }
     }
 
     // Return all revisions to a given node
@@ -146,12 +166,14 @@
         ->execute();
 
       if($originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ)) {
+
         // Load Original Revisions entities
         $originalRevisionEntity = [];
         foreach ($originalRevisions as $key => $value) {
           // TODO dynamique load by entity instead only node based
           $originalRevisionEntity[] = $entityManagerService->getStorage('node')->loadRevision($value->vid);
         }
+        return $originalRevisionEntity;
       }
     }
 

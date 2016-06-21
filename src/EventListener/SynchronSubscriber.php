@@ -22,7 +22,10 @@
       $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
       // TODO: Add synchro id field
-      // $synchronService->provisionFromSiteToAnother(11197, $fromDatabase, $toDatabase);
+      // If node exists
+      if($originalNode = Node::load(11197)) {
+        $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
+      }
 
       // TODO if asked synchronization of content we check request here and then we provision
     }

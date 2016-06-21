@@ -8,10 +8,11 @@
   function synchron_install() {
     // Create field storage for the 'Highlight' base field.
     $entity_manager = \Drupal::entityManager();
-    $definition = $entity_manager->getFieldStorageDefinitions('node')['synchronid'];
-    $entity_manager->onFieldStorageDefinitionCreate($definition);
-    \Drupal::entityManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    if($definition = $entity_manager->getFieldStorageDefinitions('node')['synchronid']) {
+      $entity_manager->onFieldStorageDefinitionCreate($definition);
+      \Drupal::entityManager()->clearCachedDefinitions();
+      \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    }
   }
 
   /**
@@ -22,13 +23,14 @@
     $query = \Drupal::entityQuery('node');
     $query->condition('synchronid', 'NULL', '!=');
     $entity_ids = $query->execute();
-    foreach($entity_ids as $nid) {
+    foreach ($entity_ids as $nid) {
       Node::load($nid)->set('synchronid', NULL)->save();
     }
     // Update
     $entity_manager = \Drupal::entityManager();
-    $definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid'];
-    $entity_manager->onFieldStorageDefinitionDelete($definition);
-    \Drupal::entityManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    if($definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid']) {
+      $entity_manager->onFieldStorageDefinitionDelete($definition);
+      \Drupal::entityManager()->clearCachedDefinitions();
+      \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    }
   }
