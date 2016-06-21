@@ -23,7 +23,7 @@
 
       // TODO: Add synchro id field
       // If node exists
-      if($originalNode = Node::load(11197)) {
+      if($originalNode = Node::load(11257)) {
         $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
       }
 

@@ -66,11 +66,11 @@
 
         // If entity hasnt synchronid add new one
         if(!$nodeThisDatabase['synchronid']) {
-          $syncronid = uniqid();
-          $loadNodeThisDatabase->set('synchronid', $syncronid)->save();
+          $synchronid = uniqid();
+          $loadNodeThisDatabase->set('synchronid', $synchronid)->save();
           $nodeThisDatabase = $loadNodeThisDatabase->toArray();
         } else {
-          $syncronid = $nodeThisDatabase['synchronid'][0]['value'];
+          $synchronid = $nodeThisDatabase['synchronid'][0]['value'];
         }
 
         // Get all revisions from original node
@@ -81,7 +81,7 @@
         $this->setConnectionDatabase($toDatabase);
 
         // Load node by synchronid to match the target node
-        if($loadNodeTargetDatabase = $this->loadNode($syncronid, 'synchronid')) {
+        if($loadNodeTargetDatabase = $this->loadNode($synchronid, 'synchronid')) {
           // TODO replace target data with origin data
           // Delete target revisions
           // Replace target fields except nid
@@ -90,22 +90,22 @@
         } else {
           $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
           $loadNodeTargetDatabase->save();
+          $loadNodeTargetDatabase = Node::load($loadNodeTargetDatabase->id());
         }
 
         // Update revisions on target node
         $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalNodeRevisions);
 
-        print_r('From');
-        print_r($loadNodeThisDatabase->id());
-        print_r('==============================================================================================================');
-        print_r('To');
-        print_r($loadNodeTargetDatabase->id());
-        die();
+        // print_r('From');
+        // print_r($loadNodeThisDatabase->id());
+        // print_r('==============================================================================================================');
+        // print_r('To');
+        // print_r($loadNodeTargetDatabase->id());
+        // die();
       }
     }
 
     protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions) {
-      // print_r($targetNode->toArray());
       // Delete target revisions
       $this->deleteRevisions($targetNode);
       // Insert revisions
@@ -124,7 +124,7 @@
         $targetNode->setNewRevision();
         $targetNode->save();
       }
-      die();
+      // die();
     }
 
     protected function moduleHandler() {
@@ -151,7 +151,7 @@
       if($targetNode) {
         $entityManagerService = $node_revision = \Drupal::entityTypeManager();
         $getEntityRevisions = $this->serviceDatabase->delete('node_revision')
-          ->condition('revision_uid', $targetNode->get('revision_uid')->getValue()[0]['target_id'])
+          ->condition('nid', $targetNode->id())
           ->condition('vid', $targetNode->get('vid')->getValue()[0]['value'], '!=')
           ->execute();
       }
@@ -161,7 +161,7 @@
     protected function getRevisions($originalNode) {
       $entityManagerService = $node_revision = \Drupal::entityTypeManager();
       $getEntityRevisions = $this->serviceDatabase->select('node_revision', 'nr')
-        ->condition('nr.revision_uid', $originalNode->get('revision_uid')->getValue()[0]['target_id'])
+        ->condition('nr.nid', $originalNode->id())
         ->fields('nr')
         ->execute();
 
