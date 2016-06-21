@@ -24,7 +24,7 @@
       // TODO: Add synchro id field
       // If node exists
       if($originalNode = Node::load(11257)) {
-        $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
+        // $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
       }
 
       // TODO if asked synchronization of content we check request here and then we provision

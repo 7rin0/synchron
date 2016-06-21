@@ -86,7 +86,7 @@
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
-          echo '#####FOUND#####';
+          // echo '#####FOUND#####';
         } else {
           $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
           $loadNodeTargetDatabase->save();
