@@ -1,0 +1,9 @@
+synchron.sync:
+  path: '/node/{node}/synchron/{database}'
+  defaults:
+    _title: 'Synchronization bettween databases on the same server'
+    database: 'default'
+    _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
+  requirements:
+    _permission: 'administer nodes'
+    node: \d+

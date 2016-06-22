@@ -86,18 +86,17 @@
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
-          echo '#####FOUND#####';
+          // echo '#####FOUND#####';
         } else {
-          echo '#####NOT FOUND#####';
+          // echo '#####NOT FOUND#####';
           $loadNodeTargetDatabase = Node::create($this->entityValues($loadNodeThisDatabase));
           $loadNodeTargetDatabase->save();
         }
 
-
         // Update revisions on target node
         $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalNodeRevisions);
 
-        print_r('========================================' . $loadNodeThisDatabase->id() . '========================================' . $loadNodeTargetDatabase->id() . '========================================');
+        // print_r('========================================' . $loadNodeThisDatabase->id() . '========================================' . $loadNodeTargetDatabase->id() . '========================================');
         // die();
         $this->setConnectionDatabase($fromDatabase);
       }
@@ -166,10 +165,13 @@
     protected function deleteRevisions($targetNode) {
       if($targetNode) {
         $entityManagerService = $node_revision = \Drupal::entityTypeManager();
-        $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
-          ->condition('nid', $targetNode->id())
-          ->condition('vid', $targetNode->get('vid')->getValue()[0]['value'], '!=')
-          ->execute();
+        $targetNodeVid = $targetNode->get('vid')->getValue()[0]['value'];
+        if((boolean)$targetNodeVid) {
+          $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
+            ->condition('nid', $targetNode->id())
+            ->condition('vid', $targetNodeVid, '<')
+            ->execute();
+        }
       }
     }
 
