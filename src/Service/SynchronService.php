@@ -65,13 +65,13 @@
         $nodeThisDatabase = $loadNodeThisDatabase->toArray();
 
         // If entity hasnt synchronid add new one
-        if(!$nodeThisDatabase['synchronid']) {
-          $synchronid = uniqid();
-          $loadNodeThisDatabase->set('synchronid', $synchronid)->save();
+        if(!$nodeThisDatabase['synchronid'][0]['value']) {
+          $loadNodeThisDatabase->set('synchronid', mt_rand())->save();
           $nodeThisDatabase = $loadNodeThisDatabase->toArray();
-        } else {
-          $synchronid = $nodeThisDatabase['synchronid'][0]['value'];
         }
+
+        // Update synchronid
+        $synchronid = $nodeThisDatabase['synchronid'][0]['value'];
 
         // Get all revisions from original node
         $originalNodeRevisions = $this->getRevisions($loadNodeThisDatabase);
@@ -86,23 +86,44 @@
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
-          // echo '#####FOUND#####';
+          echo '#####FOUND#####';
         } else {
-          $loadNodeTargetDatabase = $loadNodeThisDatabase->createDuplicate()->setOriginalId();
+          echo '#####NOT FOUND#####';
+          $loadNodeTargetDatabase = Node::create($this->entityValues($loadNodeThisDatabase));
           $loadNodeTargetDatabase->save();
-          $loadNodeTargetDatabase = Node::load($loadNodeTargetDatabase->id());
         }
+
 
         // Update revisions on target node
         $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalNodeRevisions);
 
-        // print_r('From');
-        // print_r($loadNodeThisDatabase->id());
-        // print_r('==============================================================================================================');
-        // print_r('To');
-        // print_r($loadNodeTargetDatabase->id());
+        print_r('========================================' . $loadNodeThisDatabase->id() . '========================================' . $loadNodeTargetDatabase->id() . '========================================');
         // die();
+        $this->setConnectionDatabase($fromDatabase);
       }
+    }
+
+    protected function entityValues(Node $node, $returnUnique = true) {
+
+      // Create associative array of key value from each field
+      $fieldsKeyValue = [];
+      // Entity to array
+      $nodeValues = $node->toArray();
+      unset(
+        $nodeValues['nid'],
+        $nodeValues['uuid'],
+        $nodeValues['uid'],
+        $nodeValues['vid']
+      );
+
+      // Return Key => value/pair
+      foreach ($nodeValues as $key => $value) {
+        if($value = @reset($value[0])) {
+          $fieldsKeyValue[$key] = $value;
+        }
+      }
+
+      return $fieldsKeyValue;
     }
 
     protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions) {
@@ -110,12 +131,7 @@
       $this->deleteRevisions($targetNode);
       // Insert revisions
       foreach ($originalNodeRevisions as $revisionNode) {
-        $revisionValues = $revisionNode->toArray();
-        unset(
-          $revisionValues['nid'],
-          $revisionValues['uuid'],
-          $revisionValues['vid']
-        );
+        $revisionValues = $this->entityValues($revisionNode);
         foreach ($revisionValues as $key => $value) {
           if($targetNode->getFieldDefinition($key)) {
             $targetNode->set($key, $value);
@@ -150,7 +166,7 @@
     protected function deleteRevisions($targetNode) {
       if($targetNode) {
         $entityManagerService = $node_revision = \Drupal::entityTypeManager();
-        $getEntityRevisions = $this->serviceDatabase->delete('node_revision')
+        $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
           ->condition('nid', $targetNode->id())
           ->condition('vid', $targetNode->get('vid')->getValue()[0]['value'], '!=')
           ->execute();

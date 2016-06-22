@@ -13,3 +13,16 @@
       return $fields;
     }
   }
+
+  // TODO if theres a synchronid auto update; button mandatory if no admin interface
+  // function synchron_entity_presave(Drupal\Core\Entity\EntityInterface $originalNode) {
+  //   // TODO: Add synchro id field
+  //   // If node exists
+  //   if($originalNode) {
+  //     $synchronService = \Drupal::service('synchron');
+  //     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+  //     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
+  //     // Get main synchron services
+  //     $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
+  //   }
+  // }
