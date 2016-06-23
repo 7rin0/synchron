@@ -97,12 +97,12 @@
 
     public function prepareSynchronId(Node $node, $return = 'nid') {
       $nodeThisDatabase = $node->toArray();
-      if(!$nodeThisDatabase['synchronid'][0]['value']) {
+      if(!(boolean)$nodeThisDatabase['synchronid']) {
         $synchronid = mt_rand();
         if($node->isNew()) {
           $node->set('synchronid', $synchronid);
         } else {
-          $node->set('synchronid', $synchronid)->save();
+          // $node->set('synchronid', $synchronid)->save();
         }
       }
       return $return === 'nid' ?
@@ -191,7 +191,6 @@
         ->execute();
 
       if($originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ)) {
-
         // Load Original Revisions entities
         $originalRevisionEntity = [];
         foreach ($originalRevisions as $key => $value) {
