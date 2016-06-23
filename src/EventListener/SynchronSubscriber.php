@@ -13,6 +13,11 @@
 
     public function checkForSynchronization(GetResponseEvent $event) {
 
+      foreach (\Drupal\node\Entity\Node::loadMultiple() as $node) {
+        $node->set('synchronid', NULL)->save();
+      }
+      die();
+
       // // Get main synchron services
       // $synchronService = \Drupal::service('synchron');
       //

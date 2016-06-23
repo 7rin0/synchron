@@ -20,11 +20,9 @@
    */
   function synchron_uninstall() {
     // Delete All references to synchronid
-    $query = \Drupal::entityQuery('node');
-    $query->condition('synchronid', 'NULL', '!=');
-    $entity_ids = $query->execute();
-    foreach ($entity_ids as $nid) {
-      Node::load($nid)->set('synchronid', NULL)->save();
+    // TODO put this foreach on custom event or subscriber before unninstall module synchronid
+    foreach (\Drupal\node\Entity\Node::loadMultiple() as $node) {
+      $node->set('synchronid', NULL)->save();
     }
     // Update
     $entity_manager = \Drupal::entityManager();
