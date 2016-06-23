@@ -1,6 +1,7 @@
 <?php
 
   use Drupal\Core\Entity\EntityTypeInterface;
+  use \Drupal\node\Entity\Node;
   use Drupal\Core\Field\BaseFieldDefinition;
 
   function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
@@ -15,14 +16,16 @@
   }
 
   // TODO if theres a synchronid auto update; button mandatory if no admin interface
-  // function synchron_entity_presave(Drupal\Core\Entity\EntityInterface $originalNode) {
+  function synchron_node_presave(Node $originalNode) {
   //   // TODO: Add synchro id field
   //   // If node exists
-  //   if($originalNode) {
-  //     $synchronService = \Drupal::service('synchron');
-  //     $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+    if($originalNode) {
+      $synchronService = \Drupal::service('synchron');
+      // $originalDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+      // If entity hasnt synchronid add new one
+      $originalNode = $synchronService->prepareSynchronId($originalNode, 'entity');
   //     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
   //     // Get main synchron services
   //     $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
-  //   }
-  // }
+    }
+  }

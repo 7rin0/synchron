@@ -62,16 +62,9 @@
 
       // If entity exists continue
       if($loadNodeThisDatabase = $this->loadNode($nid, 'nid')) {
-        $nodeThisDatabase = $loadNodeThisDatabase->toArray();
 
         // If entity hasnt synchronid add new one
-        if(!$nodeThisDatabase['synchronid'][0]['value']) {
-          $loadNodeThisDatabase->set('synchronid', mt_rand())->save();
-          $nodeThisDatabase = $loadNodeThisDatabase->toArray();
-        }
-
-        // Update synchronid
-        $synchronid = $nodeThisDatabase['synchronid'][0]['value'];
+        $synchronid = $this->prepareSynchronId($loadNodeThisDatabase);
 
         // Get all revisions from original node
         $originalNodeRevisions = $this->getRevisions($loadNodeThisDatabase);
@@ -100,6 +93,20 @@
         // die();
         $this->setConnectionDatabase($fromDatabase);
       }
+    }
+
+    public function prepareSynchronId(Node $node, $return = 'nid') {
+      $nodeThisDatabase = $node->toArray();
+      if(!$nodeThisDatabase['synchronid'][0]['value']) {
+        $synchronid = mt_rand();
+        if($node->isNew()) {
+          $node->set('synchronid', $synchronid);
+        } else {
+          $node->set('synchronid', $synchronid)->save();
+        }
+      }
+      return $return === 'nid' ?
+        $node->get('synchronid')->getValue()[0]['value'] : $node;
     }
 
     protected function entityValues(Node $node, $returnUnique = true) {
