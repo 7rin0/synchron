@@ -4,11 +4,12 @@
   namespace Drupal\synchron\Service;
 
   use \Drupal\node\Entity\Node;
+  use \Drupal\core\Entity\Entity;
 
   class SynchronService {
 
+    public $getStorage;
     protected $serviceDatabase;
-    protected $entityTypeId;
     protected $defaultConnectionOptions;
 
     public function __construct() {
@@ -44,31 +45,26 @@
     }
 
     public function loadNode($value, $field) {
-      // Get storage
-      $nodeStorage = \Drupal::entityManager()->getStorage($this->entityTypeId);
-      $nodeStorage->resetCache(array($value));
-
       // Query
-      $query = \Drupal::entityQuery($this->entityTypeId);
+      $query = \Drupal::entityQuery($this->$getStorage->getEntityTypeId());
       $query->condition($field, $value);
       $entity_ids = $query->execute();
 
       // Return the last updated node
-      return Node::load(@end($entity_ids));
+      return $this->getStorage->load(@end($entity_ids));
     }
 
-    public function provisionFromSiteToAnother($nid, $fromDatabase, $toDatabase) {
+    // TODO alter names everywhere: originalEntity and TargetEntity
+    public function provisionFromSiteToAnother(Entity $entity, $fromDatabase, $toDatabase) {
       // Set database connection to $fromDatabase
       $this->setConnectionDatabase($fromDatabase);
-
       // If entity exists continue
-      if($loadNodeThisDatabase = $this->loadNode($nid, 'nid')) {
-
+      if($entity) {
         // If entity hasnt synchronid add new one
-        $synchronid = $this->prepareSynchronId($loadNodeThisDatabase);
+        $synchronid = $this->prepareSynchronId($entity);
 
         // Get all revisions from original node
-        $originalNodeRevisions = $this->getRevisions($loadNodeThisDatabase);
+        $originalNodeRevisions = $this->getRevisions($entity);
 
         // Synchro this content to another databases
         // Set database connection to $toDatabase
@@ -83,15 +79,14 @@
           // echo '#####FOUND#####';
         } else {
           // echo '#####NOT FOUND#####';
-          $loadNodeTargetDatabase = get_class($loadEntity)::create($this->entityValues($loadNodeThisDatabase));
+          $loadNodeTargetDatabase = get_class($loadEntity)::create($this->entityValues($entity));
           $loadNodeTargetDatabase->save();
         }
 
         // Update revisions on target node
-        $this->updateTargetNode($loadNodeThisDatabase, $loadNodeTargetDatabase, $originalNodeRevisions);
+        $this->updateTargetNode($entity, $loadNodeTargetDatabase, $originalNodeRevisions);
 
-        // print_r('========================================' . $loadNodeThisDatabase->id() . '========================================' . $loadNodeTargetDatabase->id() . '========================================');
-        // die();
+        // Set target database as default
         $this->setConnectionDatabase($fromDatabase);
       }
     }
@@ -147,7 +142,6 @@
         $targetNode->setNewRevision();
         $targetNode->save();
       }
-      // die();
     }
 
     protected function moduleHandler() {
@@ -155,12 +149,12 @@
       $moduleInstallerService = \Drupal::service('module_installer');
       // Check if module exists
       $moduleExists = $moduleHandlerService->moduleExists('synchron');
+
       // Check if module is enabled
       $isSynchronEnabled = $this->serviceDatabase->select('key_value', 'kv')
         ->condition('kv.name', 'synchron')
         ->fields('kv')
         ->execute();
-
       // TODO Force entities to update if needed
       if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
         $moduleExists = $moduleInstallerService->install(array('synchron'));
@@ -196,7 +190,7 @@
         $originalRevisionEntity = [];
         foreach ($originalRevisions as $key => $value) {
           // TODO dynamique load by entity instead only node based
-          $originalRevisionEntity[] = $entityManagerService->getStorage($this->entityTypeId)->loadRevision($value->vid);
+          $originalRevisionEntity[] = $this->getStorage->loadRevision($value->vid);
         }
         return $originalRevisionEntity;
       }
@@ -204,7 +198,7 @@
 
     public function getEntity() {
       // Get entity
-      $query = \Drupal::entityQuery($this->entityTypeId);
+      $query = \Drupal::entityQuery($this->getStorage->getEntityTypeId());
       $query->condition('type', 'article');
       $entity_ids = $query->execute();
       return $entity_ids;

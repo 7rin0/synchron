@@ -8,10 +8,14 @@
   function synchron_install() {
     // Create field storage for the 'Highlight' base field.
     $entity_manager = \Drupal::entityManager();
-    if($definition = $entity_manager->getFieldStorageDefinitions('node')['synchronid']) {
-      $entity_manager->onFieldStorageDefinitionCreate($definition);
-      \Drupal::entityManager()->clearCachedDefinitions();
-      \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // TODO get all entities and add synchronid field
+    $entitiesToUpdate = array('node', 'group');
+    foreach($entitiesToUpdate as $entityTypeId) {
+      if($definition = $entity_manager->getFieldStorageDefinitions($entityTypeId)['synchronid']) {
+        $entity_manager->onFieldStorageDefinitionCreate($definition);
+        \Drupal::entityManager()->clearCachedDefinitions();
+        \Drupal::service('entity.definition_update_manager')->applyUpdates();
+      }
     }
   }
 
@@ -21,14 +25,17 @@
   function synchron_uninstall() {
     // Delete All references to synchronid
     // TODO put this foreach on custom event or subscriber before unninstall module synchronid
-    foreach (\Drupal\node\Entity\Node::loadMultiple() as $node) {
-      $node->set('synchronid', NULL)->save();
-    }
-    // Update
-    $entity_manager = \Drupal::entityManager();
-    if($definition = $entity_manager->getLastInstalledFieldStorageDefinitions('node')['synchronid']) {
-      $entity_manager->onFieldStorageDefinitionDelete($definition);
-      \Drupal::entityManager()->clearCachedDefinitions();
-      \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $entitiesToUpdate = array('node', 'group');
+    foreach($entitiesToUpdate as $entityTypeId) {
+      foreach (\Drupal\node\Entity\Node::loadMultiple() as $node) {
+        $node->set('synchronid', NULL)->save();
+      }
+      // Update
+      $entity_manager = \Drupal::entityManager();
+      if($definition = $entity_manager->getLastInstalledFieldStorageDefinitions($entityTypeId)['synchronid']) {
+        $entity_manager->onFieldStorageDefinitionDelete($definition);
+        \Drupal::entityManager()->clearCachedDefinitions();
+        \Drupal::service('entity.definition_update_manager')->applyUpdates();
+      }
     }
   }

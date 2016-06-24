@@ -19,23 +19,25 @@
       // TODO Dynamic routing parameters
       $targetDatabase = \Drupal::request()->get('database');
       $originalNodeID = \Drupal::request()->get('node');
-      $loadEntity = strpos($_SERVER[REQUEST_URI], 'node') ? Node::load($originalNodeID) : Group::load($originalNodeID);
-      var_dump($loadEntity->getEntityTypeId());die();
+      $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
+      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[2]);
 
-      // TODO: Get this values from admin form
-      // Get name off from and to databases
-      $synchronService->storageId = $loadEntity->getEntityTypeId(); $synchronService->getDefaultConnectionOptions()['database'];
-      $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
+      // TODO this doesnt seem right nor global, update after
+      if($originalNode = $getStorage->load($originalNodeID)) {
 
-      // TODO: Add synchro id field
-      // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS
-      // If node exists
-      if($loadEntity) {
-        $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
+        // TODO: Get this values from admin form
+        // Get name off from and to databases
+        $synchronService->getStorage = $getStorage;
+        $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+        $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
+
+        // TODO: Add synchro id field
+        // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS
+        // If node exists
+        $synchronService->provisionFromSiteToAnother($originalNode, $fromDatabase, $toDatabase);
       }
 
       // Revenir à la page de gestion des fonctionnalites
       return new RedirectResponse('/admin/content');
     }
-
   }
