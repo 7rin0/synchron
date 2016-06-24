@@ -1,9 +1,24 @@
-synchron.sync:
+# TODO dynamic routes in favor or this ones; node and group should be relative
+synchron.sync.node:
   path: '/node/{node}/synchron/{database}'
   defaults:
     _title: 'Synchronization bettween databases on the same server'
     database: 'default'
     _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
   requirements:
-    _permission: 'administer nodes'
+    # entity_type: 'node|group'
+    _role: 'administrator'
+    # _permission: 'administer nodes'
+    node: \d+
+
+synchron.sync.group:
+  path: '/group/{node}/synchron/{database}'
+  defaults:
+    _title: 'Synchronization bettween databases on the same server'
+    database: 'default'
+    _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
+  requirements:
+    # entity_type: 'node|group'
+    _role: 'administrator'
+    # _permission: 'administer nodes'
     node: \d+
