@@ -8,6 +8,7 @@
   class SynchronService {
 
     protected $serviceDatabase;
+    protected $entityTypeId;
     protected $defaultConnectionOptions;
 
     public function __construct() {
@@ -44,11 +45,11 @@
 
     public function loadNode($value, $field) {
       // Get storage
-      $nodeStorage = \Drupal::entityManager()->getStorage('node');
+      $nodeStorage = \Drupal::entityManager()->getStorage($this->entityTypeId);
       $nodeStorage->resetCache(array($value));
 
       // Query
-      $query = \Drupal::entityQuery('node');
+      $query = \Drupal::entityQuery($this->entityTypeId);
       $query->condition($field, $value);
       $entity_ids = $query->execute();
 
@@ -82,7 +83,7 @@
           // echo '#####FOUND#####';
         } else {
           // echo '#####NOT FOUND#####';
-          $loadNodeTargetDatabase = Node::create($this->entityValues($loadNodeThisDatabase));
+          $loadNodeTargetDatabase = get_class($loadEntity)::create($this->entityValues($loadNodeThisDatabase));
           $loadNodeTargetDatabase->save();
         }
 
@@ -95,7 +96,7 @@
       }
     }
 
-    public function prepareSynchronId(Node $node, $return = 'nid') {
+    public function prepareSynchronId($node, $return = 'nid') {
       $nodeThisDatabase = $node->toArray();
       if(!(boolean)$nodeThisDatabase['synchronid']) {
         $synchronid = mt_rand();
@@ -109,7 +110,7 @@
         $node->get('synchronid')->getValue()[0]['value'] : $node;
     }
 
-    protected function entityValues(Node $node, $returnUnique = true) {
+    protected function entityValues($node, $returnUnique = true) {
 
       // Create associative array of key value from each field
       $fieldsKeyValue = [];
@@ -195,7 +196,7 @@
         $originalRevisionEntity = [];
         foreach ($originalRevisions as $key => $value) {
           // TODO dynamique load by entity instead only node based
-          $originalRevisionEntity[] = $entityManagerService->getStorage('node')->loadRevision($value->vid);
+          $originalRevisionEntity[] = $entityManagerService->getStorage($this->entityTypeId)->loadRevision($value->vid);
         }
         return $originalRevisionEntity;
       }
@@ -203,7 +204,7 @@
 
     public function getEntity() {
       // Get entity
-      $query = \Drupal::entityQuery('node');
+      $query = \Drupal::entityQuery($this->entityTypeId);
       $query->condition('type', 'article');
       $entity_ids = $query->execute();
       return $entity_ids;

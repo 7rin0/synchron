@@ -20,19 +20,17 @@
       $targetDatabase = \Drupal::request()->get('database');
       $originalNodeID = \Drupal::request()->get('node');
       $loadEntity = strpos($_SERVER[REQUEST_URI], 'node') ? Node::load($originalNodeID) : Group::load($originalNodeID);
-
-      var_dump($loadEntity->toArray());
-      die();
+      var_dump($loadEntity->getEntityTypeId());die();
 
       // TODO: Get this values from admin form
       // Get name off from and to databases
-      $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+      $synchronService->storageId = $loadEntity->getEntityTypeId(); $synchronService->getDefaultConnectionOptions()['database'];
       $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
       // TODO: Add synchro id field
       // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS
       // If node exists
-      if($originalNode = Node::load($originalNodeID)) {
+      if($loadEntity) {
         $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
       }
 
