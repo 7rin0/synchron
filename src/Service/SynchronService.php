@@ -79,8 +79,11 @@
           // echo '#####FOUND#####';
         } else {
           // echo '#####NOT FOUND#####';
-          $loadNodeTargetDatabase = get_class($loadEntity)::create($this->entityValues($entity));
+          $loadNodeTargetDatabase = $this->getStorage->create($this->entityValues($entity));
+          die();
+          // TODO Check first database dependencies to avoid errors on migration to the target one BUG with search_api_solr
           $loadNodeTargetDatabase->save();
+          // die('sssss');
         }
 
         // Update revisions on target node
