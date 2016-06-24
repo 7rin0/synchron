@@ -46,7 +46,7 @@
 
     public function loadNode($value, $field) {
       // Query
-      $query = \Drupal::entityQuery($this->$getStorage->getEntityTypeId());
+      $query = \Drupal::entityQuery($this->getStorage->getEntityTypeId());
       $query->condition($field, $value);
       $entity_ids = $query->execute();
 
