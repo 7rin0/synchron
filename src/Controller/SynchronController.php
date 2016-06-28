@@ -19,15 +19,12 @@
       // TODO Dynamic routing parameters
       $targetDatabase = \Drupal::request()->get('database');
       $originalNodeID = \Drupal::request()->get('node');
-      $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
-      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[2]);
 
       // TODO this doesnt seem right nor global, update after
-      if($originalNode = $getStorage->load($originalNodeID)) {
+      if($originalNode = $synchronService->getStorage->load($originalNodeID)) {
 
         // TODO: Get this values from admin form
         // Get name off from and to databases
-        $synchronService->getStorage = $getStorage;
         $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
         $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 

@@ -13,6 +13,11 @@
     protected $defaultConnectionOptions;
 
     public function __construct() {
+      // TODO URGENT
+      // TODO offcourse impreve this, avoid dependency on URL
+      $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
+      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[2]);
+      $this->getStorage = $getStorage;
       $this->serviceDatabase = \Drupal::service('database');
       $this->defaultConnectionOptions = $this->serviceDatabase->getConnectionOptions();
     }
@@ -25,6 +30,7 @@
     // TODO Stock connection one and two to avoid open new one each time
     public function setConnectionDatabase($databaseName) {
 
+       \Drupal::cache()->delete();
       // Get active current database service connection
       $getConnectionOptions = $this->getDefaultConnectionOptions();
 
@@ -39,6 +45,12 @@
 
       // Override the service by passing new values to connection construct
       $this->serviceDatabase->__construct($pdoConnection, $getConnectionOptions);
+
+      // TODO better implementations
+      // Update Storage
+      \Drupal::entityManager()->getStorage('user')->resetCache();
+      $this->getStorage->resetCache();
+      $this->getStorage = \Drupal::entityManager()->getStorage($this->getStorage->getEntityTypeId());
 
       // CHeck if module exists
       $this->moduleHandler();
@@ -61,7 +73,7 @@
       // If entity exists continue
       if($entity) {
         // If entity hasnt synchronid add new one
-        $synchronid = $this->prepareSynchronId($entity);
+        $synchronid = $this->setGetSynchronId($entity);
 
         // Get all revisions from original node
         $originalNodeRevisions = $this->getRevisions($entity);
@@ -76,54 +88,65 @@
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
-          // echo '#####FOUND#####';
         } else {
           // echo '#####NOT FOUND#####';
+          // TODO IGNORE TARGET ID
+          // TODO Throw error due missing fields
+          // TODO ask t synchron data safe mode
           $loadNodeTargetDatabase = $this->getStorage->create($this->entityValues($entity));
-          die();
+          $loadNodeTargetDatabase->set('uid', 1);
+          $loadNodeTargetDatabase->set('synchronid', $synchronid);
+          // $user = \Drupal::entityTypeManager()->getStorage('user')->load(1);
+          // $entite_achat->addMember($user, ['group_roles' => ['entite_d_achat-group_admin']]);
+          // $violations = $loadNodeTargetDatabase->validate();
+          //  var_dump($violations[0]->getMessage());
+          //  var_dump($loadNodeTargetDatabase->toArray()['langcode']);
+          //  die();
           // TODO Check first database dependencies to avoid errors on migration to the target one BUG with search_api_solr
+          // var_dump($loadNodeTargetDatabase->toArray());
           $loadNodeTargetDatabase->save();
-          // die('sssss');
         }
 
+        // TODO check if has revisions
         // Update revisions on target node
-        $this->updateTargetNode($entity, $loadNodeTargetDatabase, $originalNodeRevisions);
+        if($loadNodeTargetDatabase->hasField('vid')) {
+          $this->updateTargetNode($entity, $loadNodeTargetDatabase, $originalNodeRevisions);
+        }
 
         // Set target database as default
         $this->setConnectionDatabase($fromDatabase);
       }
     }
 
-    public function prepareSynchronId($node, $return = 'nid') {
-      $nodeThisDatabase = $node->toArray();
-      if(!(boolean)$nodeThisDatabase['synchronid']) {
-        $synchronid = mt_rand();
-        if($node->isNew()) {
-          $node->set('synchronid', $synchronid);
-        } else {
-          // $node->set('synchronid', $synchronid)->save();
-        }
+    public function setGetSynchronId($originalEntity) {
+      $originalEntityToArray = $originalEntity->toArray();
+      if($originalEntity->isNew()) {
+          $originalEntity->set('synchronid', mt_rand());
+      } elseif (!(boolean)$originalEntityToArray['synchronid']) {
+          $originalEntity->set('synchronid', mt_rand())->save();
       }
-      return $return === 'nid' ?
-        $node->get('synchronid')->getValue()[0]['value'] : $node;
+      return $originalEntity->get('synchronid')->getValue()[0]['value'];
     }
 
     protected function entityValues($node, $returnUnique = true) {
+
+      // print_r(array_keys($node->getFieldDefinitions()));die();
 
       // Create associative array of key value from each field
       $fieldsKeyValue = [];
       // Entity to array
       $nodeValues = $node->toArray();
+      $nodeValues['uid'] = 1;
       unset(
+        $nodeValues['id'],
         $nodeValues['nid'],
         $nodeValues['uuid'],
-        $nodeValues['uid'],
         $nodeValues['vid']
       );
 
       // Return Key => value/pair
       foreach ($nodeValues as $key => $value) {
-        if($value = @reset($value[0])) {
+        if($node->getFieldDefinition($key) && $value = @reset($value[0])) {
           $fieldsKeyValue[$key] = $value;
         }
       }
@@ -137,15 +160,20 @@
       // Insert revisions
       foreach ($originalNodeRevisions as $revisionNode) {
         $revisionValues = $this->entityValues($revisionNode);
-        foreach ($revisionValues as $key => $value) {
-          if($targetNode->getFieldDefinition($key)) {
-            $targetNode->set($key, $value);
-          }
-        }
+        // Update, insert and validate fields
+        $this->insertValuesIntoEntity($targetNode, $revisionValues);
         $targetNode->setNewRevision();
         $targetNode->save();
       }
     }
+
+    protected function insertValuesIntoEntity($entity, $values) {
+    foreach ($values as $key => $value) {
+      if($entity->getFieldDefinition($key)) {
+        $entity->set($key, $value);
+      }
+    }
+  }
 
     protected function moduleHandler() {
       $moduleHandlerService = \Drupal::service('module_handler');
