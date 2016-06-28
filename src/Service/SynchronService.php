@@ -16,7 +16,7 @@
       // TODO URGENT
       // TODO offcourse impreve this, avoid dependency on URL
       $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
-      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[2]);
+      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[array_search('synchron', $entityArg0)-2]);
       $this->getStorage = $getStorage;
       $this->serviceDatabase = \Drupal::service('database');
       $this->defaultConnectionOptions = $this->serviceDatabase->getConnectionOptions();
@@ -67,16 +67,16 @@
     }
 
     // TODO alter names everywhere: originalEntity and TargetEntity
-    public function provisionFromSiteToAnother(Entity $entity, $fromDatabase, $toDatabase) {
+    public function provisionFromSiteToAnother(Entity $originalEntity, $fromDatabase, $toDatabase) {
       // Set database connection to $fromDatabase
       $this->setConnectionDatabase($fromDatabase);
       // If entity exists continue
-      if($entity) {
+      if($originalEntity) {
         // If entity hasnt synchronid add new one
-        $synchronid = $this->setGetSynchronId($entity);
+        $synchronid = $this->setGetSynchronId($originalEntity);
 
         // Get all revisions from original node
-        $originalNodeRevisions = $this->getRevisions($entity);
+        $originalNodeRevisions = $this->getRevisions($originalEntity);
 
         // Synchro this content to another databases
         // Set database connection to $toDatabase
@@ -88,12 +88,14 @@
           // Delete target revisions
           // Replace target fields except nid
           // TODO when provisionning check if theres related entities do rovision aswell
+          echo '#####FOUND#####';
+          $this->updateTargetNode($originalEntity, $loadNodeTargetDatabase, null);
         } else {
-          // echo '#####NOT FOUND#####';
+          echo '#####NOT FOUND#####';
           // TODO IGNORE TARGET ID
           // TODO Throw error due missing fields
           // TODO ask t synchron data safe mode
-          $loadNodeTargetDatabase = $this->getStorage->create($this->entityValues($entity));
+          $loadNodeTargetDatabase = $this->getStorage->create($this->entityValues($originalEntity));
           $loadNodeTargetDatabase->set('uid', 1);
           $loadNodeTargetDatabase->set('synchronid', $synchronid);
           // $user = \Drupal::entityTypeManager()->getStorage('user')->load(1);
@@ -110,7 +112,7 @@
         // TODO check if has revisions
         // Update revisions on target node
         if($loadNodeTargetDatabase->hasField('vid')) {
-          $this->updateTargetNode($entity, $loadNodeTargetDatabase, $originalNodeRevisions);
+          $this->updateTargetNode($originalEntity, $loadNodeTargetDatabase, $originalNodeRevisions);
         }
 
         // Set target database as default
@@ -129,9 +131,6 @@
     }
 
     protected function entityValues($node, $returnUnique = true) {
-
-      // print_r(array_keys($node->getFieldDefinitions()));die();
-
       // Create associative array of key value from each field
       $fieldsKeyValue = [];
       // Entity to array
@@ -154,20 +153,26 @@
       return $fieldsKeyValue;
     }
 
-    protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions) {
-      // Delete target revisions
-      $this->deleteRevisions($targetNode);
-      // Insert revisions
-      foreach ($originalNodeRevisions as $revisionNode) {
-        $revisionValues = $this->entityValues($revisionNode);
-        // Update, insert and validate fields
-        $this->insertValuesIntoEntity($targetNode, $revisionValues);
-        $targetNode->setNewRevision();
-        $targetNode->save();
+    protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions = NULL) {
+      // Fields first
+      $this->setValuesIntoEntity($targetNode, $this->entityValues($originalNode));
+      $targetNode->save();
+
+      // Revisions next
+      if($originalNodeRevisions) {
+        $this->deleteRevisions($targetNode);
+        // Insert revisions
+        foreach ($originalNodeRevisions as $revisionNode) {
+          $revisionValues = $this->entityValues($revisionNode);
+          // Update, insert and validate fields
+          $this->setValuesIntoEntity($targetNode, $revisionValues);
+          $targetNode->setNewRevision();
+          $targetNode->save();
+        }
       }
     }
 
-    protected function insertValuesIntoEntity($entity, $values) {
+    protected function setValuesIntoEntity($entity, $values) {
     foreach ($values as $key => $value) {
       if($entity->getFieldDefinition($key)) {
         $entity->set($key, $value);

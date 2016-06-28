@@ -1,9 +1,9 @@
 services:
   # Handles database connection and provision from one site to another
   synchron:
-    class: Drupal\synchron\Service\SynchronService
+    class: \Drupal\synchron\Service\SynchronService
   # Subscriber to alter init configurations on Drupal
   synchron_event_subscriber:
-    class: Drupal\synchron\EventListener\SynchronSubscriber
+    class: \Drupal\synchron\EventListener\SynchronSubscriber
     tags:
       - {name: event_subscriber}
