@@ -32,7 +32,7 @@
         // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS
         // If node exists
         $synchronService->provisionFromSiteToAnother($originalNode, $fromDatabase, $toDatabase);
-      }die();
+      }
 
       // Revenir à la page de gestion des fonctionnalites
       return new RedirectResponse('/admin/content');

@@ -23,13 +23,18 @@
    * Implements hook_uninstall().
    */
   function synchron_uninstall() {
+
     // Delete All references to synchronid
     // TODO put this foreach on custom event or subscriber before unninstall module synchronid
+    // // TODO warning message before indicating the field references will be lost or generate a file backup to recover old mappings (export/import json format)
     $entitiesToUpdate = array('node', 'group');
     foreach($entitiesToUpdate as $entityTypeId) {
-      foreach (\Drupal\node\Entity\Node::loadMultiple() as $node) {
-        $node->set('synchronid', NULL)->save();
+      foreach (\Drupal::entityManager()->getStorage($entityTypeId)->loadMultiple() as $node) {
+        if($node->hasField('synchronid')) {
+          $node->set('synchronid', NULL)->save();
+        }
       }
+      \Drupal::entityManager()->getStorage($entityTypeId)->resetCache();
       // Update
       $entity_manager = \Drupal::entityManager();
       if($definition = $entity_manager->getLastInstalledFieldStorageDefinitions($entityTypeId)['synchronid']) {
