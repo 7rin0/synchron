@@ -205,13 +205,16 @@ class SynchronService {
   }
 
   /**
-   * [updateTargetEntity description]
-   * @param  {[type]} $originalEntity          [description]
-   * @param  {[type]} $targetEntity            [description]
-   * @param  {[type]} $originalEntityRevisions =             NULL [description]
-   * @return {[type]}                        [description]
+   * Upate values of the target entity.
+   *
+   * @param Entity $originalEntity
+   *   The origin entity.
+   * @param Entity $targetEntity
+   *   The targeted entity.
+   * @param array $originalEntityRevisions
+   *   The revisions to also synchronize.
    */
-  protected function updateTargetEntity($originalEntity, $targetEntity, $originalEntityRevisions = NULL) {
+  protected function updateTargetEntity(Entity $originalEntity, Entity $targetEntity, $originalEntityRevisions = NULL) {
     // Fields first.
     $this->setValuesIntoEntity($targetEntity, $this->entityValues($originalEntity));
     $targetEntity->save();
@@ -231,11 +234,14 @@ class SynchronService {
   }
 
   /**
-   * [setValuesIntoEntity description]
-   * @param {[type]} $entity [description]
-   * @param {[type]} $values [description]
+   * From a group of values keyed by field update an entity.
+   *
+   * @param Entity $entity
+   *   The affected entity.
+   * @param array $values
+   *   The values to be set on entity.
    */
-  protected function setValuesIntoEntity($entity, $values) {
+  protected function setValuesIntoEntity(Entity $entity, $values) {
     foreach ($values as $key => $value) {
       if ($entity->getFieldDefinition($key)) {
         $entity->set($key, $value);
@@ -244,8 +250,10 @@ class SynchronService {
   }
 
   /**
-   * [moduleHandler description]
-   * @return {[type]} [description]
+   * Ensure that synchron is enable on both databases.
+   *
+   * @return boolean $moduleExists
+   *   True if is enable False otherwise.
    */
   protected function moduleHandler() {
     $moduleHandlerService = \Drupal::service('module_handler');
@@ -267,15 +275,16 @@ class SynchronService {
   }
 
   /**
-   * Delete all revisions to a given entity.
-   * @param  {[type]} $targetEntity [description]
-   * @return {[type]}             [description]
+   * Delete all revisions of a given entity.
+   *
+   * @param Entity $targetEntity
+   *   The entity to be removed all revision references.
    */
-  protected function deleteRevisions($targetEntity) {
+  protected function deleteRevisions(Entity $targetEntity) {
     if ($targetEntity) {
       $entityManagerService = $entity_revision = \Drupal::entityTypeManager();
       $targetEntityVid = $targetEntity->get('vid')->getValue()[0]['value'];
-      if ((boolean)$targetEntityVid) {
+      if ((boolean) $targetEntityVid) {
         $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
           ->condition('nid', $targetEntity->id())
           ->condition('vid', $targetEntityVid, '<')
@@ -286,10 +295,14 @@ class SynchronService {
 
   /**
    * Return all revisions to a given entity.
-   * @param  {[type]} $originalEntity [description]
-   * @return {[type]}               [description]
+   *
+   * @param Entity $originalEntity
+   *   The entity from we extract the revisions.
+   *
+   * @return array $originalRevisionEntity
+   *   Return all revisions
    */
-  protected function getRevisions($originalEntity) {
+  protected function getRevisions(Entity $originalEntity) {
     $entityManagerService = $entity_revision = \Drupal::entityTypeManager();
     $getEntityRevisions = $this->serviceDatabase->select('node_revision', 'nr')
       ->condition('nr.nid', $originalEntity->id())
