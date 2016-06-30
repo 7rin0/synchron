@@ -1,242 +1,310 @@
 <?php
 
-  // TODO: USE THIS AS SERVICE
-  namespace Drupal\synchron\Service;
+namespace Drupal\synchron\Service;
 
-  use \Drupal\node\Entity\Node;
-  use \Drupal\core\Entity\Entity;
+use \Drupal\core\Entity\Entity;
 
-  class SynchronService {
+/**
+ * SynchronService Handle some requests.
+ *
+ * @category Class
+ *
+ * @package SynchronService
+ */
+class SynchronService {
 
-    public $getStorage;
-    protected $serviceDatabase;
-    protected $defaultConnectionOptions;
+  public $getStorage;
+  protected $serviceDatabase;
+  protected $defaultConnectionOptions;
 
-    public function __construct() {
-      // TODO URGENT
-      // TODO offcourse impreve this, avoid dependency on URL
-      $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
-      $getStorage = \Drupal::entityManager()->getStorage($entityArg0[array_search('synchron', $entityArg0)-2]);
-      $this->getStorage = $getStorage;
-      $this->serviceDatabase = \Drupal::service('database');
-      $this->defaultConnectionOptions = $this->serviceDatabase->getConnectionOptions();
-    }
+  /**
+   * Class constructor __construct.
+   */
+  public function __construct() {
+    // TODO URGENT.
+    // TODO offcourse impreve this, avoid dependency on URL.
+    $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
+    $getStorage = \Drupal::entityManager()->getStorage($entityArg0[array_search('synchron', $entityArg0) - 2]);
+    $this->getStorage = $getStorage;
+    $this->serviceDatabase = \Drupal::service('database');
+    $this->defaultConnectionOptions = $this->serviceDatabase->getConnectionOptions();
+  }
 
-    // Get Default database connection
-    public function getDefaultConnectionOptions() {
-      return $this->defaultConnectionOptions;
-    }
+  /**
+   * Get Default database connection.
+   *
+   * @return array
+   *   connection options.
+   */
+  public function getDefaultConnectionOptions() {
+    return $this->defaultConnectionOptions;
+  }
 
-    // TODO Stock connection one and two to avoid open new one each time
-    public function setConnectionDatabase($databaseName) {
+  /**
+   * Set target database as default.
+   *
+   * @param string $databaseName
+   *   Database name.
+   */
+  public function setConnectionDatabase($databaseName) {
+    // TODO Stock connection one and two to avoid open new one each time.
+    \Drupal::cache()->delete();
+    // Get active current database service connection.
+    $getConnectionOptions = $this->getDefaultConnectionOptions();
 
-       \Drupal::cache()->delete();
-      // Get active current database service connection
-      $getConnectionOptions = $this->getDefaultConnectionOptions();
+    // Choose a database name.
+    // Use an admin form to handle the database name liste.
+    // Override default database name only because.
+    // This will work on the same server only.
+    $getConnectionOptions['database'] = $databaseName;
 
-      // Choose a database name
-      // Use an admin form to handle the database name liste
-      // Override default database name only because
-      // This will work on the same server only
-      $getConnectionOptions['database'] = $databaseName;
+    // Return the good PDO object to this connection.
+    $pdoConnection = $this->serviceDatabase->open($getConnectionOptions);
 
-      // Return the good PDO object to this connection
-      $pdoConnection = $this->serviceDatabase->open($getConnectionOptions);
+    // Override the service by passing new values to connection construct.
+    $this->serviceDatabase->__construct($pdoConnection, $getConnectionOptions);
 
-      // Override the service by passing new values to connection construct
-      $this->serviceDatabase->__construct($pdoConnection, $getConnectionOptions);
+    // TODO better implementations.
+    // Update Storage.
+    \Drupal::entityManager()->getStorage('user')->resetCache();
+    $this->getStorage->resetCache();
+    $this->getStorage = \Drupal::entityManager()->getStorage($this->getStorage->getEntityTypeId());
 
-      // TODO better implementations
-      // Update Storage
-      \Drupal::entityManager()->getStorage('user')->resetCache();
-      $this->getStorage->resetCache();
-      $this->getStorage = \Drupal::entityManager()->getStorage($this->getStorage->getEntityTypeId());
+    // CHeck if module exists.
+    $this->moduleHandler();
+  }
 
-      // CHeck if module exists
-      $this->moduleHandler();
-    }
+  /**
+   * Load entity by field/value.
+   *
+   * @param string $value
+   *   The expected value to the conditional field.
+   * @param string $field
+   *   The field being used to get the entity.
+   *
+   * @return Entity|FALSE
+   *   Return found entity or FALSE otherwise.
+   */
+  public function loadEntity($value, $field) {
+    // Query.
+    $query = \Drupal::entityQuery($this->getStorage->getEntityTypeId());
+    $query->condition($field, $value);
+    $entity_ids = $query->execute();
 
-    public function loadNode($value, $field) {
-      // Query
-      $query = \Drupal::entityQuery($this->getStorage->getEntityTypeId());
-      $query->condition($field, $value);
-      $entity_ids = $query->execute();
+    // Return the last updated entity.
+    return $this->getStorage->load(@end($entity_ids));
+  }
 
-      // Return the last updated node
-      return $this->getStorage->load(@end($entity_ids));
-    }
+  /**
+   * Provision a content from origin databse to the target one.
+   *
+   * @param Entity $originalEntity
+   *   Original entity.
+   * @param string $fromDatabase
+   *   Origin Database name.
+   * @param string $toDatabase
+   *   Target Database name.
+   */
+  public function provisionFromSiteToAnother(Entity $originalEntity, $fromDatabase, $toDatabase) {
+    // TODO alter names everywhere: originalEntity and TargetEntity.
+    // Set database connection to $fromDatabase.
+    $this->setConnectionDatabase($fromDatabase);
+    // If entity exists continue.
+    if ($originalEntity) {
+      // If entity hasnt synchronid add new one.
+      $synchronid = $this->setGetSynchronId($originalEntity);
 
-    // TODO alter names everywhere: originalEntity and TargetEntity
-    public function provisionFromSiteToAnother(Entity $originalEntity, $fromDatabase, $toDatabase) {
-      // Set database connection to $fromDatabase
+      // Get all revisions from original entity.
+      $originalEntityRevisions = $this->getRevisions($originalEntity);
+
+      // Synchro this content to another databases.
+      // Set database connection to $toDatabase.
+      $this->setConnectionDatabase($toDatabase);
+
+      // Load entity by synchronid to match the target entity.
+      if ($loadEntityTargetDatabase = $this->loadEntity($synchronid, 'synchronid')) {
+        // TODO replace target data with origin data.
+        // Delete target revisions.
+        // Replace target fields except nid.
+        $this->updateTargetEntity($originalEntity, $loadEntityTargetDatabase, NULL);
+      }
+      else {
+        // TODO IGNORE TARGET ID.
+        // TODO Throw error due missing fields.
+        // TODO ask t synchron data safe mode.
+        $loadEntityTargetDatabase = $this->getStorage->create($this->entityValues($originalEntity));
+        $loadEntityTargetDatabase->set('uid', 1);
+        $loadEntityTargetDatabase->set('synchronid', $synchronid);
+        // TODO log actions and violations everywhere.
+        // TODO Check first database dependencies to avoid errors on migration.
+        // var_dump($loadEntityTargetDatabase->toArray());
+        $loadEntityTargetDatabase->save();
+      }
+
+      // TODO check if has revisions.
+      // Update revisions on target entity.
+      if ($loadEntityTargetDatabase->hasField('vid')) {
+        $this->updateTargetEntity($originalEntity, $loadEntityTargetDatabase, $originalEntityRevisions);
+      }
+
+      // Set target database as default.
       $this->setConnectionDatabase($fromDatabase);
-      // If entity exists continue
-      if($originalEntity) {
-        // If entity hasnt synchronid add new one
-        $synchronid = $this->setGetSynchronId($originalEntity);
+    }
+  }
 
-        // Get all revisions from original node
-        $originalNodeRevisions = $this->getRevisions($originalEntity);
+  /**
+   * Return and set synchronid, if not defined, on origin Entity.
+   *
+   * @param Entity $originalEntity
+   *   Entity to be checked or updated.
+   *
+   * @return string
+   *   Return the synchron id.
+   */
+  public function setGetSynchronId(Entity $originalEntity) {
+    $originalEntityToArray = $originalEntity->toArray();
+    if ($originalEntity->isNew()) {
+      $originalEntity->set('synchronid', mt_rand());
+    }
+    elseif (!(boolean) $originalEntityToArray['synchronid']) {
+      $originalEntity->set('synchronid', mt_rand())->save();
+    }
+    return $originalEntity->get('synchronid')->getValue()[0]['value'];
+  }
 
-        // Synchro this content to another databases
-        // Set database connection to $toDatabase
-        $this->setConnectionDatabase($toDatabase);
+  /**
+   * Extract the values from an entity and prepare to set on target one.
+   *
+   * @param Entity $entity
+   *   Origin entity from we extract values.
+   *
+   * @return array $fieldsKeyValue
+   *   Return sanitized fields.
+   */
+  protected function entityValues(Entity $entity) {
+    // Create associative array of key value from each field.
+    $fieldsKeyValue = [];
+    // Entity to array.
+    $entityValues = $entity->toArray();
+    $entityValues['uid'] = 1;
+    unset(
+      $entityValues['id'],
+      $entityValues['nid'],
+      $entityValues['uuid'],
+      $entityValues['vid']
+    );
 
-        // Load node by synchronid to match the target node
-        if($loadNodeTargetDatabase = $this->loadNode($synchronid, 'synchronid')) {
-          // TODO replace target data with origin data
-          // Delete target revisions
-          // Replace target fields except nid
-          // TODO when provisionning check if theres related entities do rovision aswell
-          echo '#####FOUND#####';
-          $this->updateTargetNode($originalEntity, $loadNodeTargetDatabase, null);
-        } else {
-          echo '#####NOT FOUND#####';
-          // TODO IGNORE TARGET ID
-          // TODO Throw error due missing fields
-          // TODO ask t synchron data safe mode
-          $loadNodeTargetDatabase = $this->getStorage->create($this->entityValues($originalEntity));
-          $loadNodeTargetDatabase->set('uid', 1);
-          $loadNodeTargetDatabase->set('synchronid', $synchronid);
-          // $user = \Drupal::entityTypeManager()->getStorage('user')->load(1);
-          // $entite_achat->addMember($user, ['group_roles' => ['entite_d_achat-group_admin']]);
-          // $violations = $loadNodeTargetDatabase->validate();
-          //  var_dump($violations[0]->getMessage());
-          //  var_dump($loadNodeTargetDatabase->toArray()['langcode']);
-          //  die();
-          // TODO Check first database dependencies to avoid errors on migration to the target one BUG with search_api_solr
-          // var_dump($loadNodeTargetDatabase->toArray());
-          $loadNodeTargetDatabase->save();
-        }
-
-        // TODO check if has revisions
-        // Update revisions on target node
-        if($loadNodeTargetDatabase->hasField('vid')) {
-          $this->updateTargetNode($originalEntity, $loadNodeTargetDatabase, $originalNodeRevisions);
-        }
-
-        // Set target database as default
-        $this->setConnectionDatabase($fromDatabase);
+    // Return Key => value/pair.
+    foreach ($entityValues as $key => $value) {
+      if ($entity->getFieldDefinition($key) && $value = @reset($value[0])) {
+        $fieldsKeyValue[$key] = $value;
       }
     }
 
-    public function setGetSynchronId($originalEntity) {
-      $originalEntityToArray = $originalEntity->toArray();
-      if($originalEntity->isNew()) {
-          $originalEntity->set('synchronid', mt_rand());
-      } elseif (!(boolean)$originalEntityToArray['synchronid']) {
-          $originalEntity->set('synchronid', mt_rand())->save();
-      }
-      return $originalEntity->get('synchronid')->getValue()[0]['value'];
-    }
+    return $fieldsKeyValue;
+  }
 
-    protected function entityValues($node, $returnUnique = true) {
-      // Create associative array of key value from each field
-      $fieldsKeyValue = [];
-      // Entity to array
-      $nodeValues = $node->toArray();
-      $nodeValues['uid'] = 1;
-      unset(
-        $nodeValues['id'],
-        $nodeValues['nid'],
-        $nodeValues['uuid'],
-        $nodeValues['vid']
-      );
+  /**
+   * [updateTargetEntity description]
+   * @param  {[type]} $originalEntity          [description]
+   * @param  {[type]} $targetEntity            [description]
+   * @param  {[type]} $originalEntityRevisions =             NULL [description]
+   * @return {[type]}                        [description]
+   */
+  protected function updateTargetEntity($originalEntity, $targetEntity, $originalEntityRevisions = NULL) {
+    // Fields first.
+    $this->setValuesIntoEntity($targetEntity, $this->entityValues($originalEntity));
+    $targetEntity->save();
 
-      // Return Key => value/pair
-      foreach ($nodeValues as $key => $value) {
-        if($node->getFieldDefinition($key) && $value = @reset($value[0])) {
-          $fieldsKeyValue[$key] = $value;
-        }
-      }
-
-      return $fieldsKeyValue;
-    }
-
-    protected function updateTargetNode($originalNode, $targetNode, $originalNodeRevisions = NULL) {
-      // Fields first
-      $this->setValuesIntoEntity($targetNode, $this->entityValues($originalNode));
-      $targetNode->save();
-
-      // Revisions next
-      if($originalNodeRevisions) {
-        $this->deleteRevisions($targetNode);
-        // Insert revisions
-        foreach ($originalNodeRevisions as $revisionNode) {
-          $revisionValues = $this->entityValues($revisionNode);
-          // Update, insert and validate fields
-          $this->setValuesIntoEntity($targetNode, $revisionValues);
-          $targetNode->setNewRevision();
-          $targetNode->save();
-        }
+    // Revisions next.
+    if ($originalEntityRevisions) {
+      $this->deleteRevisions($targetEntity);
+      // Insert revisions.
+      foreach ($originalEntityRevisions as $revisionEntity) {
+        $revisionValues = $this->entityValues($revisionEntity);
+        // Update, insert and validate fields.
+        $this->setValuesIntoEntity($targetEntity, $revisionValues);
+        $targetEntity->setNewRevision();
+        $targetEntity->save();
       }
     }
+  }
 
-    protected function setValuesIntoEntity($entity, $values) {
+  /**
+   * [setValuesIntoEntity description]
+   * @param {[type]} $entity [description]
+   * @param {[type]} $values [description]
+   */
+  protected function setValuesIntoEntity($entity, $values) {
     foreach ($values as $key => $value) {
-      if($entity->getFieldDefinition($key)) {
+      if ($entity->getFieldDefinition($key)) {
         $entity->set($key, $value);
       }
     }
   }
 
-    protected function moduleHandler() {
-      $moduleHandlerService = \Drupal::service('module_handler');
-      $moduleInstallerService = \Drupal::service('module_installer');
-      // Check if module exists
-      $moduleExists = $moduleHandlerService->moduleExists('synchron');
+  /**
+   * [moduleHandler description]
+   * @return {[type]} [description]
+   */
+  protected function moduleHandler() {
+    $moduleHandlerService = \Drupal::service('module_handler');
+    $moduleInstallerService = \Drupal::service('module_installer');
+    // Check if module exists.
+    $moduleExists = $moduleHandlerService->moduleExists('synchron');
 
-      // Check if module is enabled
-      $isSynchronEnabled = $this->serviceDatabase->select('key_value', 'kv')
-        ->condition('kv.name', 'synchron')
-        ->fields('kv')
-        ->execute();
-      // TODO Force entities to update if needed
-      if(!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
-        $moduleExists = $moduleInstallerService->install(array('synchron'));
-      }
-
-      return $moduleExists;
+    // Check if module is enabled.
+    $isSynchronEnabled = $this->serviceDatabase->select('key_value', 'kv')
+      ->condition('kv.name', 'synchron')
+      ->fields('kv')
+      ->execute();
+    // TODO Force entities to update if needed.
+    if (!$moduleExists || !$isSynchronEnabled->fetchAll(\PDO::FETCH_OBJ)) {
+      $moduleExists = $moduleInstallerService->install(array('synchron'));
     }
 
-    // Delete all revisions to a given node
-    protected function deleteRevisions($targetNode) {
-      if($targetNode) {
-        $entityManagerService = $node_revision = \Drupal::entityTypeManager();
-        $targetNodeVid = $targetNode->get('vid')->getValue()[0]['value'];
-        if((boolean)$targetNodeVid) {
-          $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
-            ->condition('nid', $targetNode->id())
-            ->condition('vid', $targetNodeVid, '<')
-            ->execute();
-        }
+    return $moduleExists;
+  }
+
+  /**
+   * Delete all revisions to a given entity.
+   * @param  {[type]} $targetEntity [description]
+   * @return {[type]}             [description]
+   */
+  protected function deleteRevisions($targetEntity) {
+    if ($targetEntity) {
+      $entityManagerService = $entity_revision = \Drupal::entityTypeManager();
+      $targetEntityVid = $targetEntity->get('vid')->getValue()[0]['value'];
+      if ((boolean)$targetEntityVid) {
+        $deleteOldRevisions = $this->serviceDatabase->delete('node_revision')
+          ->condition('nid', $targetEntity->id())
+          ->condition('vid', $targetEntityVid, '<')
+          ->execute();
       }
-    }
-
-    // Return all revisions to a given node
-    protected function getRevisions($originalNode) {
-      $entityManagerService = $node_revision = \Drupal::entityTypeManager();
-      $getEntityRevisions = $this->serviceDatabase->select('node_revision', 'nr')
-        ->condition('nr.nid', $originalNode->id())
-        ->fields('nr')
-        ->execute();
-
-      if($originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ)) {
-        // Load Original Revisions entities
-        $originalRevisionEntity = [];
-        foreach ($originalRevisions as $key => $value) {
-          // TODO dynamique load by entity instead only node based
-          $originalRevisionEntity[] = $this->getStorage->loadRevision($value->vid);
-        }
-        return $originalRevisionEntity;
-      }
-    }
-
-    public function getEntity() {
-      // Get entity
-      $query = \Drupal::entityQuery($this->getStorage->getEntityTypeId());
-      $query->condition('type', 'article');
-      $entity_ids = $query->execute();
-      return $entity_ids;
     }
   }
+
+  /**
+   * Return all revisions to a given entity.
+   * @param  {[type]} $originalEntity [description]
+   * @return {[type]}               [description]
+   */
+  protected function getRevisions($originalEntity) {
+    $entityManagerService = $entity_revision = \Drupal::entityTypeManager();
+    $getEntityRevisions = $this->serviceDatabase->select('node_revision', 'nr')
+      ->condition('nr.nid', $originalEntity->id())
+      ->fields('nr')
+      ->execute();
+
+    if ($originalRevisions = $getEntityRevisions->fetchAll(\PDO::FETCH_OBJ)) {
+      // Load Original Revisions entities.
+      $originalRevisionEntity = [];
+      foreach ($originalRevisions as $key => $value) {
+        // TODO dynamique load by entity instead only entity based.
+        $originalRevisionEntity[] = $this->getStorage->loadRevision($value->vid);
+      }
+      return $originalRevisionEntity;
+    }
+  }
+
+}

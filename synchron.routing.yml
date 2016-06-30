@@ -1,6 +1,6 @@
-# TODO dynamic routes in favor or this ones; node and group should be relative
-synchron.sync.node:
-  path: '/node/{node}/synchron/{database}'
+# TODO dynamic routes in favor or this ones; entity and group should be relative
+synchron.sync.entity:
+  path: '/node/{entity}/synchron/{database}'
   defaults:
     _title: 'Synchronization bettween databases on the same server'
     database: 'default'
@@ -9,10 +9,10 @@ synchron.sync.node:
     # entity_type: 'node|group'
     _role: 'administrator'
     # _permission: 'administer nodes'
-    node: \d+
+    entity: \d+
 
 synchron.sync.group:
-  path: '/group/{node}/synchron/{database}'
+  path: '/group/{entity}/synchron/{database}'
   defaults:
     _title: 'Synchronization bettween databases on the same server'
     database: 'default'
@@ -20,5 +20,5 @@ synchron.sync.group:
   requirements:
     # entity_type: 'node|group'
     _role: 'administrator'
-    # _permission: 'administer nodes'
-    node: \d+
+    # _permission: 'administer entitys'
+    entity: \d+

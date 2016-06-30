@@ -1,40 +1,51 @@
 <?php
 
-  namespace Drupal\synchron\Controller;
+namespace Drupal\synchron\Controller;
 
-  use Drupal\Core\Controller\ControllerBase;
-  use Symfony\Component\HttpFoundation\RedirectResponse;
-  use Drupal\Core\Entity\EntityInterface;
-  use Drupal\node\Entity\Node;
-  use Drupal\group\Entity\Group;
+use Drupal\Core\Controller\ControllerBase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
-  class SynchronController extends ControllerBase {
+/**
+ * SynchronController Class Handle synchronization between same server database.
+ *
+ * @category Class
+ *
+ * @package SynchronController
+ */
+class SynchronController extends ControllerBase {
 
-    public function syncToDatabase() {
-      // Get main synchron services
-      $synchronService = \Drupal::service('synchron');
+  /**
+   * Method syncToDatabase is applied to manage synchronization.
+   *
+   * @return RedirectResponse
+   *   Redirect to Content Admin.
+   */
+  public function syncToDatabase() {
+    // Get main synchron services.
+    $synchronService = \Drupal::service('synchron');
 
-      // Get request node and database
-      // TODO do not use this parameter , need to think about it
-      // TODO Dynamic routing parameters
-      $targetDatabase = \Drupal::request()->get('database');
-      $originalNodeID = \Drupal::request()->get('node');
+    // Get request entity and database.
+    // TODO do not use this parameter , need to think about it.
+    // TODO Dynamic routing parameters.
+    $targetDatabase = \Drupal::request()->get('database');
+    $originalEntityID = \Drupal::request()->get('entity');
 
-      // TODO this doesnt seem right nor global, update after
-      if($originalNode = $synchronService->getStorage->load($originalNodeID)) {
+    // TODO this doesnt seem right nor global, update after.
+    if ($originalEntity = $synchronService->getStorage->load($originalEntityID)) {
 
-        // TODO: Get this values from admin form
-        // Get name off from and to databases
-        $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
-        $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
+      // TODO: Get this values from admin form.
+      // Get name off from and to databases.
+      $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
+      $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
 
-        // TODO: Add synchro id field
-        // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS
-        // If node exists
-        $synchronService->provisionFromSiteToAnother($originalNode, $fromDatabase, $toDatabase);
-      }
-
-      // Revenir à la page de gestion des fonctionnalites
-      return new RedirectResponse('/admin/content');
+      // TODO: Add synchro id field.
+      // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS.
+      // If entity exists.
+      $synchronService->provisionFromSiteToAnother($originalEntity, $fromDatabase, $toDatabase);
     }
+
+    // Revenir à la page de gestion des fonctionnalites.
+    return new RedirectResponse('/admin/content');
   }
+
+}

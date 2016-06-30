@@ -1,31 +1,45 @@
 <?php
 
-  use Drupal\Core\Entity\EntityTypeInterface;
-  use \Drupal\node\Entity\Node;
-  use Drupal\Core\Field\BaseFieldDefinition;
+/**
+ * @file
+ * Drupal hooks.
+ */
 
-  function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
-    // TODO: DO we need to affect every single entity? Yes we do!
-    if ($entity_type->id() == 'node' || $entity_type->id() == 'group') {
-      $fields = [];
-      $fields['synchronid'] = BaseFieldDefinition::create('integer')
-        ->setDefaultValue(0)
-        ->setLabel('Shared ID by two synchronized entities');
-      return $fields;
-    }
-  }
+use Drupal\Core\Entity\EntityTypeInterface;
+use \Drupal\node\Entity\Node;
+use Drupal\Core\Field\BaseFieldDefinition;
 
-  // TODO if theres a synchronid auto update; button mandatory if no admin interface
-  function synchron_node_presave(Node $originalNode) {
-  //   // TODO: Add synchro id field
-  //   // If node exists
-    if($originalNode) {
-      $synchronService = \Drupal::service('synchron');
-      // $originalDatabase = $synchronService->getDefaultConnectionOptions()['database'];
-      // If entity hasnt synchronid add new one
-      $originalNode = $synchronService->prepareSynchronId($originalNode, 'entity');
-  //     $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
-  //     // Get main synchron services
-  //     $synchronService->provisionFromSiteToAnother($originalNode->id(), $fromDatabase, $toDatabase);
-    }
+/**
+ * Update targeted entities schema.
+ *
+ * @param EntityTypeInterface $entity_type
+ *   Entity.
+ *
+ * @return array
+ *   Return the desired schema to the current Entity.
+ */
+function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
+  // TODO: DO we need to affect every single entity? Yes we do!
+  if ($entity_type->id() == 'node' || $entity_type->id() == 'group') {
+    $fields = [];
+    $fields['synchronid'] = BaseFieldDefinition::create('integer')
+      ->setDefaultValue(0)
+      ->setLabel('Shared ID by two synchronized entities');
+    return $fields;
   }
+}
+
+/**
+ * Prepare this to auto-synchronizations.
+ *
+ * @param Node $originalEntity
+ *   Entity.
+ */
+function synchron_node_presave(Node $originalEntity) {
+  // TODO if theres a synchronid auto update;.
+  // TODO: Add synchro id field.
+  // If entity exists.
+  if ($originalEntity) {
+    $synchronService = \Drupal::service('synchron');
+  }
+}

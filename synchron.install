@@ -1,46 +1,54 @@
 <?php
 
-  use Drupal\node\Entity\Node;
+/**
+ * @file
+ * Handles module install and uninstall.
+ */
 
-  /**
-   * Implements hook_install().
-   */
-  function synchron_install() {
-    // Create field storage for the 'Highlight' base field.
-    $entity_manager = \Drupal::entityManager();
-    // TODO get all entities and add synchronid field
-    $entitiesToUpdate = array('node', 'group');
-    foreach($entitiesToUpdate as $entityTypeId) {
-      if($definition = $entity_manager->getFieldStorageDefinitions($entityTypeId)['synchronid']) {
-        $entity_manager->onFieldStorageDefinitionCreate($definition);
-        \Drupal::entityManager()->clearCachedDefinitions();
-        \Drupal::service('entity.definition_update_manager')->applyUpdates();
-      }
+/**
+ * Hook _install synchron_install is called on installation.
+ */
+function synchron_install() {
+  // Create field storage for the 'Highlight' base field.
+  $entity_manager = \Drupal::entityManager();
+  // TODO get all entities and add synchronid field.
+  $entitiesToUpdate = array('node', 'group');
+  foreach ($entitiesToUpdate as $entityTypeId) {
+    if ($definition = $entity_manager->getFieldStorageDefinitions($entityTypeId)['synchronid']) {
+      $entity_manager->onFieldStorageDefinitionCreate($definition);
+      \Drupal::entityManager()->clearCachedDefinitions();
+      \Drupal::service('entity.definition_update_manager')->applyUpdates();
     }
   }
+}
 
-  /**
-   * Implements hook_uninstall().
-   */
-  function synchron_uninstall() {
+/**
+ * Hook _uninstall synchron_uninstall is called on uninstall.
+ */
+function synchron_uninstall() {
 
-    // Delete All references to synchronid
-    // TODO put this foreach on custom event or subscriber before unninstall module synchronid
-    // // TODO warning message before indicating the field references will be lost or generate a file backup to recover old mappings (export/import json format)
-    $entitiesToUpdate = array('node', 'group');
-    foreach($entitiesToUpdate as $entityTypeId) {
-      foreach (\Drupal::entityManager()->getStorage($entityTypeId)->loadMultiple() as $node) {
-        if($node->hasField('synchronid')) {
-          $node->set('synchronid', NULL)->save();
+  // Delete All references to synchronid.
+  // TODO put this foreach on custom event or subscriber before unninstall.
+  // TODO warning message before indicating the field references will be lost.
+  // TODO Allow export/import mappings.
+  $entitiesToUpdate = array('node', 'group');
+  foreach ($entitiesToUpdate as $entityTypeId) {
+    if ($getStorage = \Drupal::entityManager()->getStorage($entityTypeId)) {
+      foreach ($getStorage->loadMultiple() as $entity) {
+        if ($entity->hasField('synchronid')) {
+          $entity->set('synchronid', NULL)->save();
         }
       }
+      // Reset cache.
       \Drupal::entityManager()->getStorage($entityTypeId)->resetCache();
-      // Update
+
+      // Update.
       $entity_manager = \Drupal::entityManager();
-      if($definition = $entity_manager->getLastInstalledFieldStorageDefinitions($entityTypeId)['synchronid']) {
+      if ($definition = $entity_manager->getLastInstalledFieldStorageDefinitions($entityTypeId)['synchronid']) {
         $entity_manager->onFieldStorageDefinitionDelete($definition);
         \Drupal::entityManager()->clearCachedDefinitions();
         \Drupal::service('entity.definition_update_manager')->applyUpdates();
       }
     }
   }
+}
