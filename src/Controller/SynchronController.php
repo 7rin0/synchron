@@ -36,7 +36,7 @@ class SynchronController extends ControllerBase {
       // TODO: Get this values from admin form.
       // Get name off from and to databases.
       $fromDatabase = $synchronService->getDefaultConnectionOptions()['database'];
-      $toDatabase = $fromDatabase === 'ixarm' ? 'ixarm_achats' : 'ixarm';
+      $toDatabase = $fromDatabase === 'bdd1' ? 'bdd2' : 'bdd1';
 
       // TODO: Add synchro id field.
       // TODO add subriber AFTER SAVE NODE and SYNC the ALREADY SYNCED NODESS.
