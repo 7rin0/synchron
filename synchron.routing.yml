@@ -6,19 +6,7 @@ synchron.sync.entity:
     database: 'default'
     _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
   requirements:
-    # entity_type: 'node|group'
+    entity_type: 'node'
     _role: 'administrator'
-    # _permission: 'administer nodes'
-    entity: \d+
-
-synchron.sync.group:
-  path: '/group/{entity}/synchron/{database}'
-  defaults:
-    _title: 'Synchronization bettween databases on the same server'
-    database: 'default'
-    _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
-  requirements:
-    # entity_type: 'node|group'
-    _role: 'administrator'
-    # _permission: 'administer entitys'
+    _permission: 'administer nodes'
     entity: \d+

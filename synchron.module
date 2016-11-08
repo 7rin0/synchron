@@ -20,7 +20,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  */
 function synchron_entity_base_field_info(EntityTypeInterface $entity_type) {
   // TODO: DO we need to affect every single entity? Yes we do!
-  if ($entity_type->id() == 'node' || $entity_type->id() == 'group') {
+  if ($entity_type->id() == 'node') {
     $fields = [];
     $fields['synchronid'] = BaseFieldDefinition::create('integer')
       ->setDefaultValue(0)

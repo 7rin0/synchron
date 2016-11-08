@@ -12,7 +12,7 @@ function synchron_install() {
   // Create field storage for the 'Highlight' base field.
   $entity_manager = \Drupal::entityManager();
   // TODO get all entities and add synchronid field.
-  $entitiesToUpdate = array('node', 'group');
+  $entitiesToUpdate = array('node');
   foreach ($entitiesToUpdate as $entityTypeId) {
     if ($definition = $entity_manager->getFieldStorageDefinitions($entityTypeId)['synchronid']) {
       $entity_manager->onFieldStorageDefinitionCreate($definition);
@@ -31,7 +31,7 @@ function synchron_uninstall() {
   // TODO put this foreach on custom event or subscriber before unninstall.
   // TODO warning message before indicating the field references will be lost.
   // TODO Allow export/import mappings.
-  $entitiesToUpdate = array('node', 'group');
+  $entitiesToUpdate = array('node');
   foreach ($entitiesToUpdate as $entityTypeId) {
     if ($getStorage = \Drupal::entityManager()->getStorage($entityTypeId)) {
       foreach ($getStorage->loadMultiple() as $entity) {
