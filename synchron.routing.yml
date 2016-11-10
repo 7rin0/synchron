@@ -10,3 +10,10 @@ synchron.sync.entity:
     _role: 'administrator'
     _permission: 'administer nodes'
     entity: \d+
+
+synchron.databases.config:
+  path: '/admin/config/synchron/administrator'
+  defaults:
+    _title: 'Synchron - Administrator'
+  requirements:
+    _permission: 'administer'
