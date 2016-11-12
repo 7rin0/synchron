@@ -15,5 +15,6 @@ synchron.databases.config:
   path: '/admin/config/synchron/administrator'
   defaults:
     _title: 'Synchron - Administrator'
+    _form: '\Drupal\synchron\Form\SynchronAdministratorForm'
   requirements:
     _permission: 'administer'
