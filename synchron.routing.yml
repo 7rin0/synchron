@@ -11,10 +11,10 @@ synchron.sync.entity:
     _permission: 'administer nodes'
     entity: \d+
 
-synchron.databases.config:
-  path: '/admin/config/synchron/administrator'
+synchron.administration.form:
+  path: '/admin/config/synchron/administration'
   defaults:
-    _title: 'Synchron - Administrator'
-    _form: '\Drupal\synchron\Form\SynchronAdministratorForm'
+    _title: 'Synchron - Administration'
+    _form: '\Drupal\synchron\Form\SynchronAdministrationForm'
   requirements:
     _permission: 'administer'
