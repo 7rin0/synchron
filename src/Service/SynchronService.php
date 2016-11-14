@@ -23,8 +23,7 @@ class SynchronService {
   public function __construct() {
     // TODO URGENT.
     // TODO offcourse impreve this, avoid dependency on URL.
-    $entityArg0 = explode('/', $_SERVER[REQUEST_URI]);
-    $getStorage = \Drupal::entityManager()->getStorage($entityArg0[array_search('synchron', $entityArg0) - 2]);
+    $getStorage = \Drupal::entityManager()->getStorage('node');
     $this->getStorage = $getStorage;
     $this->serviceDatabase = \Drupal::service('database');
     $this->defaultConnectionOptions = $this->serviceDatabase->getConnectionOptions();
@@ -326,7 +325,23 @@ class SynchronService {
   public function sitesExtractorDatabase() {
     // Export these settings.php variables to the global namespace.
     include DRUPAL_ROOT . '/sites/sites.php';
-    kpr($sites);
+    $multisites = [];
+    $sites['default'] = 'sites/default/settings.php';
+
+    // Extract sites.
+    foreach ($sites as $url => $site_name) {
+      $settingsPath = DRUPAL_ROOT . '/sites/' . $site_name . '/settings.php';
+      if (file_exists($settingsPath)) {
+        include $settingsPath;
+        // Get Databases.
+        $multisites[$url] = [
+          'path' => $settingsPath,
+          'databases' => $databases,
+        ];
+      }
+    }
+
+    kpr($multisites);
     die();
   }
 
