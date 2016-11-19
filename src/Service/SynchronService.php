@@ -320,4 +320,14 @@ class SynchronService {
     }
   }
 
+  /**
+   *
+   */
+  public function sitesExtractorDatabase() {
+    // Export these settings.php variables to the global namespace.
+    include DRUPAL_ROOT . '/sites/sites.php';
+    kpr($sites);
+    die();
+  }
+
 }
