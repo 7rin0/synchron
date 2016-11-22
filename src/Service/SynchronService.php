@@ -320,13 +320,13 @@ class SynchronService {
   }
 
   /**
-   *
+   * Get All database options.
    */
   public function sitesExtractorDatabase() {
     // Export these settings.php variables to the global namespace.
     include DRUPAL_ROOT . '/sites/sites.php';
+    $sites['default'] = 'default';
     $multisites = [];
-    $sites['default'] = 'sites/default/settings.php';
 
     // Extract sites.
     foreach ($sites as $url => $site_name) {
@@ -341,8 +341,10 @@ class SynchronService {
       }
     }
 
-    kpr($multisites);
-    die();
+    // Sort by key name ASC.
+    ksort($multisites);
+
+    return $multisites;
   }
 
 }
