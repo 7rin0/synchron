@@ -1,15 +1,15 @@
 # TODO dynamic routes in favor or this ones; entity and group should be relative
 synchron.sync.entity:
-  path: '/node/{entity}/synchron/{database}'
+  path: '/node/synchron/{node_id}'
   defaults:
     _title: 'Synchronization bettween databases on the same server'
-    database: 'default'
+    #database: 'default'
     _controller: '\Drupal\synchron\Controller\SynchronController::syncToDatabase'
   requirements:
-    entity_type: 'node'
+    #entity_type: 'node'
     _role: 'administrator'
     _permission: 'administer nodes'
-    entity: \d+
+    node_id: \d+
 
 synchron.administration.form:
   path: '/admin/config/synchron/administration'

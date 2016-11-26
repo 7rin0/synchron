@@ -6,7 +6,8 @@
  */
 
 use Drupal\Core\Entity\EntityTypeInterface;
-use \Drupal\node\Entity\Node;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Url;
 use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
@@ -42,4 +43,61 @@ function synchron_node_presave(Node $originalEntity) {
   if ($originalEntity) {
     $synchronService = \Drupal::service('synchron');
   }
+}
+
+/**
+ *
+ */
+function synchron_toolbar_alter(&$items) {
+  // Echo '<pre>' . print_r($items, 1) . '</pre>';
+  // die();
+}
+
+/**
+ *
+ */
+function synchron_toolbar() {
+  $request = \Drupal::request();
+  $access = \Drupal::currentUser()->hasPermission('administer');
+  $synchroniseCurrentContentAccess = is_object($request->get('node')) ? $request->get('node')->id() : (int) $request->get('node');
+  $items['synchron'] = [
+    '#type' => 'toolbar_item',
+    'tab' => [
+      '#type' => 'link',
+      '#access' => $access,
+      '#title' => t('Synchron'),
+      '#url' => Url::fromRoute('synchron.administration.form'),
+      '#options' => [
+        'attributes' => [
+          'title' => t('Synchron'),
+        ],
+      ],
+    ],
+    'tray' => [
+      [
+        '#heading' => t('Synchron actions'),
+        'synchron_actions' => [
+          '#theme' => 'links__toolbar_shortcuts',
+          '#links' => [
+            [
+              'type' => 'link',
+              'title' => 'Synchron Administration',
+              'url' => Url::fromRoute('synchron.administration.form'),
+            ],
+            [
+              'type' => 'link',
+              '#access' => (boolean) $synchroniseCurrentContentAccess,
+              'title' => 'Synchroniser Node',
+              'url' => Url::fromRoute(
+                'synchron.sync.entity',
+                ['node_id' => $synchroniseCurrentContentAccess]
+              ),
+            ],
+          ],
+        ],
+      ],
+    ],
+    '#weight' => 150,
+  ];
+  return $items;
 }
