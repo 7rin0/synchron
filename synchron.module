@@ -46,20 +46,35 @@ function synchron_node_presave(Node $originalEntity) {
 }
 
 /**
- *
- */
-function synchron_toolbar_alter(&$items) {
-  // Echo '<pre>' . print_r($items, 1) . '</pre>';
-  // die();
-}
-
-/**
- *
+ * Implements hook_toolbar().
  */
 function synchron_toolbar() {
+  // Vars.
   $request = \Drupal::request();
   $access = \Drupal::currentUser()->hasPermission('administer');
   $synchroniseCurrentContentAccess = is_object($request->get('node')) ? $request->get('node')->id() : (int) $request->get('node');
+
+  // Menu items.
+  $menuItems[] = [
+    'type' => 'link',
+    'title' => 'Synchron Administration',
+    'url' => Url::fromRoute('synchron.administration.form'),
+  ];
+
+  // Propose synchronizartion if activated, item exist and is allowed.
+  if ($synchroniseCurrentContentAccess) {
+    $menuItems[] = [
+      'type' => 'link',
+      '#access' => (boolean) $synchroniseCurrentContentAccess,
+      'title' => 'Synchroniser Node',
+      'url' => Url::fromRoute(
+    'synchron.sync.entity',
+    ['node_id' => $synchroniseCurrentContentAccess]
+      ),
+    ];
+  }
+
+  // Add to toolbar.
   $items['synchron'] = [
     '#type' => 'toolbar_item',
     'tab' => [
@@ -78,22 +93,7 @@ function synchron_toolbar() {
         '#heading' => t('Synchron actions'),
         'synchron_actions' => [
           '#theme' => 'links__toolbar_shortcuts',
-          '#links' => [
-            [
-              'type' => 'link',
-              'title' => 'Synchron Administration',
-              'url' => Url::fromRoute('synchron.administration.form'),
-            ],
-            [
-              'type' => 'link',
-              '#access' => (boolean) $synchroniseCurrentContentAccess,
-              'title' => 'Synchroniser Node',
-              'url' => Url::fromRoute(
-                'synchron.sync.entity',
-                ['node_id' => $synchroniseCurrentContentAccess]
-              ),
-            ],
-          ],
+          '#links' => $menuItems,
         ],
       ],
     ],
