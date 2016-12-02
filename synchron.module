@@ -5,6 +5,7 @@
  * Drupal hooks.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Url;
@@ -46,9 +47,25 @@ function synchron_node_presave(Node $originalEntity) {
 }
 
 /**
- * Implements hook_toolbar().
+ * Implements hook_entity_operation_alter().
  */
-function synchron_toolbar() {
+function synchron_entity_operation_alter(&$operations, EntityInterface $entity) {
+  if ($entity->getEntityTypeId() == 'node') {
+    $operations[] = [
+      'title' => 'Synchroniser',
+      'weight' => 30,
+      'url' => Url::fromRoute(
+        'synchron.sync.entity',
+        ['node_id' => $entity->id()]
+      ),
+    ];
+  }
+}
+
+/**
+ * Implements hook_toolbar_alter().
+ */
+function synchron_toolbar_alter(&$items) {
   // Vars.
   $request = \Drupal::request();
   $access = \Drupal::currentUser()->hasPermission('administer');
@@ -68,8 +85,8 @@ function synchron_toolbar() {
       '#access' => (boolean) $synchroniseCurrentContentAccess,
       'title' => 'Synchroniser Node',
       'url' => Url::fromRoute(
-    'synchron.sync.entity',
-    ['node_id' => $synchroniseCurrentContentAccess]
+        'synchron.sync.entity',
+        ['node_id' => $synchroniseCurrentContentAccess]
       ),
     ];
   }
@@ -99,5 +116,4 @@ function synchron_toolbar() {
     ],
     '#weight' => 150,
   ];
-  return $items;
 }
