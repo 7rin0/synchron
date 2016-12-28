@@ -334,17 +334,39 @@ class SynchronService {
       if (file_exists($settingsPath)) {
         include $settingsPath;
         // Get Databases.
-        $multisites[$url] = [
+        $multisites[$site_name] = [
           'path' => $settingsPath,
           'databases' => $databases,
+          'site_name' => $site_name,
+          'site_url' => $url,
         ];
+        // Site name => database name.
+        $multisites['database_site_name'][$databases['default']['default']['database']] = $site_name;
       }
     }
+    // Add options.
+    $multisites['#options'] = array_flip($sites);
 
     // Sort by key name ASC.
-    ksort($multisites);
+    ksort($multisites['#options']);
 
     return $multisites;
+  }
+
+  /**
+   *
+   */
+  public function getSiteByDatabaseName($current = TRUE) {
+    // Current database name.
+    $databaseName = \Drupal::service('database')->getConnectionOptions()['database'];
+
+    // Site schema.
+    $sitesDatabases = \Drupal::service('synchron')->sitesExtractorDatabase();
+
+    // Site info.
+    $siteSchema = $sitesDatabases['database_site_name'][$databaseName];
+
+    return $siteSchema ? $siteSchema : 'default';
   }
 
 }

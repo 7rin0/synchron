@@ -37,13 +37,13 @@ class SynchronAdministrationForm extends ConfigFormBase {
     $form['synchronization_from'] = [
       '#type' => 'select',
       '#title' => $this->t('Synchronization from site:'),
-      '#options' => array_keys($databases),
+      '#options' => $databases['#options'],
       '#default_value' => $config->get('synchronization_from'),
     ];
     $form['synchronization_to'] = [
       '#type' => 'select',
       '#title' => $this->t('Synchronization to site:'),
-      '#options' => array_keys($databases),
+      '#options' => $databases['#options'],
       '#default_value' => $config->get('synchronization_to'),
     ];
     $form['actions']['#type'] = 'actions';
@@ -71,7 +71,7 @@ class SynchronAdministrationForm extends ConfigFormBase {
     $config->set('synchronization_from', $form_state->getValue('synchronization_from'));
     $config->set('synchronization_to', $form_state->getValue('synchronization_to'))
       ->save();
-
+    // TODO! Purge config cache after changes.
     parent::submitForm($form, $form_state);
   }
 

@@ -50,15 +50,31 @@ function synchron_node_presave(Node $originalEntity) {
  * Implements hook_entity_operation_alter().
  */
 function synchron_entity_operation_alter(&$operations, EntityInterface $entity) {
+  // If entity type is node add operations.
   if ($entity->getEntityTypeId() == 'node') {
-    $operations[] = [
-      'title' => 'Synchroniser',
-      'weight' => 30,
-      'url' => Url::fromRoute(
-        'synchron.sync.entity',
-        ['node_id' => $entity->id()]
-      ),
-    ];
+    // Get synchronization options.
+    $getSiteByDatabaseName = \Drupal::service('synchron')->getSiteByDatabaseName();
+
+    // Return possible synchronizations.
+    $getOriginalConfig = \Drupal::service('config.factory')->getEditable('synchron.administration')->getOriginal();
+
+    // If current site is set to synchronise with another
+    // the options are displayed.
+    if ($getOriginalConfig['synchronization_from'] == $getSiteByDatabaseName) {
+      // TODO: target sites should be multiple and foreach as iterator
+      // will be more recommended in future.
+      $operations[] = [
+        'title' => 'Synchronise',
+        'weight' => 30,
+        'url' => Url::fromRoute(
+          'synchron.sync.entity',
+          [
+            'node_id' => $entity->id(),
+            'site' => $getOriginalConfig['synchronization_to'],
+          ]
+        ),
+      ];
+    }
   }
 }
 
@@ -83,7 +99,7 @@ function synchron_toolbar_alter(&$items) {
     $menuItems[] = [
       'type' => 'link',
       '#access' => (boolean) $synchroniseCurrentContentAccess,
-      'title' => 'Synchroniser Node',
+      'title' => 'Synchronize',
       'url' => Url::fromRoute(
         'synchron.sync.entity',
         ['node_id' => $synchroniseCurrentContentAccess]
